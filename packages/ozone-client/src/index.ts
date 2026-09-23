@@ -6,6 +6,7 @@ import * as roleClient from './roleClient/roleClient'
 import * as ozoneClient from './ozoneClient/ozoneClient'
 import * as permissionClient from './permissionClient/permissionClient'
 import * as typeClient from './typeClient/typeClient'
+import * as typeCache from './typeClient/typeCache'
 import * as taskClient from './taskClient/taskClient'
 import * as importExportClient from './importExportClient/importExportClient'
 import * as fileTypeClient from './filetypeClient/filetypeClient'
@@ -33,6 +34,8 @@ export namespace OzoneClient {
 	export import RoleClient = roleClient.RoleClient
 
 	export import TypeClient = typeClient.TypeClient
+
+	export import TypeCache = typeCache.TypeCache
 
 	export import TaskClient = taskClient.TaskClient
 
