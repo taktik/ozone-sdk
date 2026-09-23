@@ -24,7 +24,7 @@ export interface TypeCache {
 	 * @param data
 	 * @param instance
 	 */
-	asInstanceOf<T>(data: Item, instance: string): T | null
+	asInstanceOf<T extends Item>(data: Item, instance: string): T | null
 
 	/**
 	 *

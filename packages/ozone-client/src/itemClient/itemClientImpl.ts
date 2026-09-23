@@ -120,7 +120,7 @@ export class ItemClientImpl<T extends Item> implements ItemClient<T> {
 	}
 }
 
-class SearchIteratorImpl<T> implements SearchIterator<T> {
+class SearchIteratorImpl<T extends Item> implements SearchIterator<T> {
 	private hasMoreData: boolean = true
 	private loadingSize: number = 0
 
