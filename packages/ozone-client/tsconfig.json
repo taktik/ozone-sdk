@@ -25,6 +25,7 @@
 		"./src/index.ts",
 		"./src/search/index.ts",
 		"./src/urls/index.ts",
-		"./src/default/index.ts"
+		"./src/default/index.ts",
+		"./src/upload/index.ts"
 	]
 }

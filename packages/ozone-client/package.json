@@ -27,6 +27,11 @@
 			"types": "./dist/default.d.ts",
 			"import": "./dist/default.mjs",
 			"require": "./dist/default.js"
+		},
+		"./upload": {
+			"types": "./dist/upload.d.ts",
+			"import": "./dist/upload.mjs",
+			"require": "./dist/upload.js"
 		}
 	},
 	"files": [
