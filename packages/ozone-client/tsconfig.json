@@ -24,6 +24,7 @@
 	"files": [
 		"./src/index.ts",
 		"./src/search/index.ts",
-		"./src/urls/index.ts"
+		"./src/urls/index.ts",
+		"./src/default/index.ts"
 	]
 }
