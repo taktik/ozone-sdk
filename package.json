@@ -12,10 +12,20 @@
 		"build": "yarn workspace @taktik/ozone-type build && yarn workspace @taktik/ozone-client build",
 		"typecheck": "yarn workspace @taktik/ozone-type typecheck && yarn workspace @taktik/ozone-client typecheck",
 		"lint": "eslint packages --ext .ts",
-		"test": "vitest run"
+		"test": "vitest run",
+		"test:watch": "vitest"
 	},
 	"devDependencies": {
+		"@types/chai": "^5.2.3",
+		"@types/nise": "^1.4.5",
+		"@types/sinon": "^22.0.0",
+		"chai": "^6.2.2",
+		"jsdom": "^30.1.1",
+		"nise": "^6.1.5",
+		"sinon": "^22.1.0",
 		"tsup": "^8.5.1",
-		"typescript": "4.5.4"
+		"typescript": "4.5.4",
+		"vite": "^7",
+		"vitest": "^5.0.1"
 	}
 }
