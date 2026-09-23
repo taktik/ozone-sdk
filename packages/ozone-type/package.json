@@ -3,6 +3,7 @@
 	"version": "1.0.0",
 	"description": "Ozone API types, generated from the server swagger",
 	"license": "ISC",
+	"private": false,
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
 	"types": "dist/index.d.ts",
@@ -24,7 +25,8 @@
 	},
 	"scripts": {
 		"build": "tsup",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"prepublishOnly": "npm run build"
 	},
 	"publishConfig": {
 		"registry": "https://npm.taktik.be/repository/npm/"

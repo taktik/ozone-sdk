@@ -25,11 +25,11 @@ import newOzoneClient = OzoneClient.newOzoneClient
 
 const config: ClientConfiguration = {
 	ozoneURL: 'https://my.ozone.domain/ozone',
-	ozoneCredentials: new UserCredentials('ozoneUser', 'ozonePassword')
+	ozoneCredentials: new UserCredentials('ozoneUser', 'ozonePassword'),
 }
 
 const client = newOzoneClient(config)
-await client.start()      // authenticates, then opens the WebSocket
+await client.start() // authenticates, then opens the WebSocket
 ```
 
 Other credentials are available for the other ways in: `SessionCredentials` (an existing browser
@@ -41,11 +41,11 @@ on its own, with an exponential back-off.
 ## The sub-clients
 
 ```typescript
-client.itemClient<Video>('video')   // items of one Ozone type
-client.blobClient()                 // binary upload and download
-client.taskClient()                 // submit a task, wait for its result
-client.typeClient()                 // type descriptors, with a cache
-client.fileTypeClient()             // file types, with a cache
+client.itemClient<Video>('video') // items of one Ozone type
+client.blobClient() // binary upload and download
+client.taskClient() // submit a task, wait for its result
+client.typeClient() // type descriptors, with a cache
+client.fileTypeClient() // file types, with a cache
 client.roleClient()
 client.permissionClient()
 client.tenantClient()
@@ -80,17 +80,21 @@ const result = await client.call<MyResult>(new Request(url).setMethod('POST').se
 
 The client is a state machine, and you can hook onto any of its states:
 
-![client state machine](docs-ressources/clientState.png)
+![client state machine](https://raw.githubusercontent.com/taktik/ozone-sdk/master/packages/ozone-client/docs-ressources/clientState.png)
 
 ```typescript
 import { OzoneClient } from '@taktik/ozone-client'
 import ClientStates = OzoneClient.states
 
-client.onEnterState(ClientStates.AUTHENTICATED, () => { /* logged in */ })
-client.onEnterState(ClientStates.STOPPED, () => { /* logged out */ })
+client.onEnterState(ClientStates.AUTHENTICATED, () => {
+	/* logged in */
+})
+client.onEnterState(ClientStates.STOPPED, () => {
+	/* logged out */
+})
 
 client.onEnterState(ClientStates.AUTHENTICATION_ERROR, () => {
-	const failure = client.lastFailedLogin      // the Response, so you can read its status
+	const failure = client.lastFailedLogin // the Response, so you can read its status
 })
 ```
 
@@ -105,10 +109,14 @@ logs in again by itself.
 Once the WebSocket is up, Ozone pushes device messages:
 
 ```typescript
-const registration = client.onMessage<DeviceMessageAlert>('alert', message => { /* ... */ })
+const registration = client.onMessage<DeviceMessageAlert>('alert', (message) => {
+	/* ... */
+})
 registration.cancel()
 
-client.onAnyMessage(message => { /* ... */ })
+client.onAnyMessage((message) => {
+	/* ... */
+})
 client.send(message)
 ```
 

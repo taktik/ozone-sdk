@@ -6,3 +6,4 @@ coverage/
 .idea/
 git.version
 version.*
+package-lock.json

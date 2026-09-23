@@ -3,6 +3,7 @@
 	"version": "1.0.0",
 	"description": "TypeScript client for Ozone: HTTP, WebSocket and the typed sub-clients",
 	"license": "ISC",
+	"private": false,
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
 	"types": "dist/index.d.ts",
@@ -44,7 +45,8 @@
 	},
 	"scripts": {
 		"build": "tsup",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
 		"@taktik/ozone-type": "1.0.0",
