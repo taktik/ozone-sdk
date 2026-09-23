@@ -13,5 +13,8 @@
 		"typecheck": "yarn workspace @taktik/ozone-type typecheck && yarn workspace @taktik/ozone-client typecheck",
 		"lint": "eslint packages --ext .ts",
 		"test": "vitest run"
+	},
+	"devDependencies": {
+		"typescript": "4.5.4"
 	}
 }

@@ -1,0 +1,43 @@
+{
+	"name": "@taktik/ozone-client",
+	"version": "1.0.0",
+	"description": "TypeScript client for Ozone: HTTP, WebSocket and the typed sub-clients",
+	"license": "ISC",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"sideEffects": false,
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/taktik/ozone-sdk.git",
+		"directory": "packages/ozone-client"
+	},
+	"scripts": {
+		"build": "tsc",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@apollo/client": "3.6.2",
+		"@taktik/ozone-type": "1.0.0",
+		"generic-logger-typings": "1.0.0",
+		"graphql": "16.4.0",
+		"helpful-decorators": "2.0.4",
+		"sockjs-client": "1.4.0",
+		"typescript-http-client": "0.10.5",
+		"typescript-state-machine": "0.9.9"
+	},
+	"devDependencies": {
+		"@types/sockjs-client": "^1.1.1"
+	},
+	"publishConfig": {
+		"registry": "https://npm.taktik.be/repository/npm/"
+	}
+}
