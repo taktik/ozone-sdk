@@ -27,10 +27,8 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@apollo/client": "3.6.2",
 		"@taktik/ozone-type": "1.0.0",
 		"generic-logger-typings": "1.0.0",
-		"graphql": "16.4.0",
 		"helpful-decorators": "2.0.4",
 		"sockjs-client": "1.4.0",
 		"typescript-http-client": "0.10.5",

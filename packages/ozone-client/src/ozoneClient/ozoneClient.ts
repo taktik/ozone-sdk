@@ -16,7 +16,6 @@ import { TaskClient } from '../taskClient/taskClient'
 import { ImportExportClient } from '../importExportClient/importExportClient'
 import { FileTypeClient } from '../filetypeClient/filetypeClient'
 import { TenantClient } from '../tenantClient/tenantClient'
-import { TypedDocumentNode } from '@apollo/client/core'
 
 export enum DEFAULT_FILTERS {
 	PRE_FILTERS= 'pre-filters',
@@ -205,6 +204,4 @@ export interface OzoneClient extends StateMachine<ClientState> {
 	 * @param logger The logger to use
 	 */
 	setLogger(logger: Logger): void
-
-	graphQLSearch<TData, TVariables>(query: TypedDocumentNode<TData, TVariables>, variables ?: TVariables): Promise<TData>
 }

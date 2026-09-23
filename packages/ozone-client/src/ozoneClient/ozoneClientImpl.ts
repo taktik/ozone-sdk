@@ -41,14 +41,6 @@ import { FiletypeClientImpl } from '../filetypeClient/filetypeClientImpl'
 import { FileTypeClient } from '../filetypeClient/filetypeClient'
 import { TenantClient } from '../tenantClient/tenantClient'
 import { TenantClientImpl } from '../tenantClient/tenantClientImpl'
-import {
-	ApolloClient,
-	HttpLink,
-	InMemoryCache,
-	NormalizedCacheObject,
-	OperationVariables,
-	TypedDocumentNode
-} from '@apollo/client/core'
 
 const MAX_REAUTH_DELAY: number = 60000
 const INITIAL_REAUTH_DELAY: number = 1000
@@ -129,7 +121,6 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 		this._importExportClient = new ImportExportClientImpl(this, this._config.ozoneURL)
 		this._filetypeClient = new FiletypeClientImpl(this, this._config.ozoneURL)
 		this._tenantClient = new TenantClientImpl(this, this._config.ozoneURL)
-		this._graphQLClient = this.createGraphQLClient(this, this._config.ozoneURL)
 	}
 
 	get config(): ClientConfiguration {
@@ -746,7 +737,6 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 	tenantClient(): TenantClient {
 		return this._tenantClient
 	}
-	private _graphQLClient: ApolloClient<NormalizedCacheObject>
 
 	insertSessionIdInURL(url: string): string {
 		if (!url.startsWith(this.config.ozoneURL)) {
@@ -760,34 +750,6 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 
 	addCustomFilter(filter: Filter<any, any>, name: string): void {
 		this._httpClient.addFilter(filter, name)
-	}
-
-	graphQLSearch<TData = any, TVariables = OperationVariables>(query: TypedDocumentNode<TData, TVariables>, variables ?: TVariables): Promise<TData> {
-		return this._graphQLClient.query({
-			query, variables
-		}).then(result => result.data)
-	}
-
-	private createGraphQLClient(client: OzoneClient, baseUrl: string): ApolloClient<NormalizedCacheObject> {
-		const link = new HttpLink({
-			fetch: (uri, options) => {
-				const req = new Request(`${baseUrl}/rest/v3/graphql`, {
-					method: options?.method,
-					body: options?.body
-				})
-				return client.call<string>(req).then(it => {
-					return {
-						text: () => Promise.resolve(JSON.stringify(it))
-					} as Response
-				})
-			}
-		})
-
-		return new ApolloClient({
-			uri: `${baseUrl}/rest/v3/graphql`,
-			cache: new InMemoryCache(),
-			link
-		})
 	}
 }
 
