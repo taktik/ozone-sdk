@@ -12,44 +12,58 @@ import * as importExportClient from './importExportClient/importExportClient'
 import * as fileTypeClient from './filetypeClient/filetypeClient'
 import * as tenantClient from './tenantClient/tenantClient'
 import { OzoneClientImpl } from './ozoneClient/ozoneClientImpl'
+import { Item } from '@taktik/ozone-type'
 
+/*
+	Re-exports are split by what they actually are. Interfaces go through
+	`export type`; classes and enums need both a `const` and a `type`, because
+	callers use them as values (`new UserCredentials(...)`) and as types
+	(`credentials: UserCredentials`) and declaration merging gives them both
+	under one name.
+
+	This used to be `export import X = mod.X` throughout. It type-checks, but it
+	is a TypeScript-only construct that erases to nothing for half of these
+	symbols, and bundlers that do not run the type checker -- esbuild, and so
+	tsup -- read it as a value import of something that does not exist.
+*/
 export namespace OzoneClient {
 
-	export import ClientState = clientState.ClientState
+	export const ClientState = clientState.ClientState
+	export type ClientState = clientState.ClientState
 
 	export const states = clientState.states
 
-	export import OzoneClient = ozoneClient.OzoneClient
+	export type OzoneClient = ozoneClient.OzoneClient
 
-	export import SearchResults = itemClient.SearchResults
+	export type SearchResults<T extends Item> = itemClient.SearchResults<T>
 
-	export import ItemClient = itemClient.ItemClient
+	export type ItemClient<T extends Item> = itemClient.ItemClient<T>
 
-	export import BlobClient = blobClient.BlobClient
+	export type BlobClient = blobClient.BlobClient
 
-	export import SearchIterator = itemClient.SearchIterator
+	export type SearchIterator<T extends Item> = itemClient.SearchIterator<T>
 
-	export import PermissionClient = permissionClient.PermissionClient
+	export type PermissionClient = permissionClient.PermissionClient
 
-	export import RoleClient = roleClient.RoleClient
+	export type RoleClient = roleClient.RoleClient
 
-	export import TypeClient = typeClient.TypeClient
+	export type TypeClient = typeClient.TypeClient
 
-	export import TypeCache = typeCache.TypeCache
+	export type TypeCache = typeCache.TypeCache
 
-	export import TaskClient = taskClient.TaskClient
+	export type TaskClient = taskClient.TaskClient
 
-	export import TaskHandler = taskClient.TaskHandler
+	export type TaskHandler<T = any> = taskClient.TaskHandler<T>
 
-	export import TaskHandlerOption = taskClient.TaskHandlerOption
+	export type TaskHandlerOption = taskClient.TaskHandlerOption
 
-	export import ImportExportClient = importExportClient.ImportExportClient
+	export type ImportExportClient = importExportClient.ImportExportClient
 
-	export import FileTypeClient = fileTypeClient.FileTypeClient
+	export type FileTypeClient = fileTypeClient.FileTypeClient
 
-	export import FileTypeCache = fileTypeClient.FileTypeCache
+	export type FileTypeCache = fileTypeClient.FileTypeCache
 
-	export import TenantClient = tenantClient.TenantClient
+	export type TenantClient = tenantClient.TenantClient
 
 	/*
 		Factory method
@@ -58,23 +72,30 @@ export namespace OzoneClient {
 		return new OzoneClientImpl(config)
 	}
 
-	export import AuthInfo = ozoneClient.AuthInfo
+	export type AuthInfo = ozoneClient.AuthInfo
 
-	export import OzoneCredentials = ozoneClient.OzoneCredentials
+	export type OzoneCredentials = ozoneClient.OzoneCredentials
 
-	export import SessionCredentials = ozoneCredentialsImpl.SessionCredentials
+	export const SessionCredentials = ozoneCredentialsImpl.SessionCredentials
+	export type SessionCredentials = ozoneCredentialsImpl.SessionCredentials
 
-	export import UserCredentials = ozoneCredentialsImpl.UserCredentials
+	export const UserCredentials = ozoneCredentialsImpl.UserCredentials
+	export type UserCredentials = ozoneCredentialsImpl.UserCredentials
 
-	export import TokenCredentials = ozoneCredentialsImpl.TokenCredentials
+	export const TokenCredentials = ozoneCredentialsImpl.TokenCredentials
+	export type TokenCredentials = ozoneCredentialsImpl.TokenCredentials
 
-	export import ItemCredentials = ozoneCredentialsImpl.ItemCredentials
+	export const ItemCredentials = ozoneCredentialsImpl.ItemCredentials
+	export type ItemCredentials = ozoneCredentialsImpl.ItemCredentials
 
-	export import ItemByQueryCredentials = ozoneCredentialsImpl.ItemByQueryCredentials
+	export const ItemByQueryCredentials = ozoneCredentialsImpl.ItemByQueryCredentials
+	export type ItemByQueryCredentials = ozoneCredentialsImpl.ItemByQueryCredentials
 
-	export import ClientConfiguration = ozoneClient.ClientConfiguration
+	export type ClientConfiguration = ozoneClient.ClientConfiguration
 
-	export import OzoneLoginCredentials = ozoneCredentialsImpl.OzoneLoginCredentials
+	export const OzoneLoginCredentials = ozoneCredentialsImpl.OzoneLoginCredentials
+	export type OzoneLoginCredentials = ozoneCredentialsImpl.OzoneLoginCredentials
 
-	export import DEFAULT_FILTERS = ozoneClient.DEFAULT_FILTERS
+	export const DEFAULT_FILTERS = ozoneClient.DEFAULT_FILTERS
+	export type DEFAULT_FILTERS = ozoneClient.DEFAULT_FILTERS
 }

@@ -4,12 +4,14 @@
 	"description": "TypeScript client for Ozone: HTTP, WebSocket and the typed sub-clients",
 	"license": "ISC",
 	"main": "dist/index.js",
+	"module": "dist/index.mjs",
 	"types": "dist/index.d.ts",
 	"sideEffects": false,
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
+			"import": "./dist/index.mjs",
+			"require": "./dist/index.js"
 		}
 	},
 	"files": [
@@ -21,7 +23,7 @@
 		"directory": "packages/ozone-client"
 	},
 	"scripts": {
-		"build": "tsc",
+		"build": "tsup",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {

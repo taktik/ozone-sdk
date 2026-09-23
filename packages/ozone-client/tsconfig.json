@@ -4,7 +4,6 @@
 		"module": "esnext",
 		"moduleResolution": "node",
 		"experimentalDecorators": true,
-		"emitDecoratorMetadata": true,
 		"strict": true,
 		"strictNullChecks": true,
 		"noImplicitThis": true,
