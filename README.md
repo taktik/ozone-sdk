@@ -1,18 +1,18 @@
 # ozone-sdk
 
-Le kit TypeScript pour parler à Ozone. Deux packages publiés :
+The TypeScript SDK for Ozone. Two published packages:
 
-| Package | Rôle |
+| Package | What it holds |
 |---|---|
-| `@taktik/ozone-type` | Les types du contrat Ozone, générés depuis le swagger du serveur |
-| `@taktik/ozone-client` | Le client HTTP/WebSocket, la construction de requêtes de recherche, les URL de médias et l'upload |
+| `@taktik/ozone-type` | The Ozone API types, generated from the server swagger |
+| `@taktik/ozone-client` | The HTTP/WebSocket client, the search query builder, media URLs and upload |
 
-Ils remplacent six packages de [`ozone-components`](https://github.com/taktik/ozone-components), qui reste en
-maintenance pour les composants Polymer uniquement.
+They replace six packages of [`ozone-components`](https://github.com/taktik/ozone-components), which stays
+in maintenance for the Polymer components only.
 
-## Correspondance avec les anciens packages
+## Moving from the old packages
 
-| Avant | Maintenant |
+| Before | Now |
 |---|---|
 | `ozone-type` | `@taktik/ozone-type` |
 | `ozone-typescript-client` | `@taktik/ozone-client` |
@@ -21,9 +21,17 @@ maintenance pour les composants Polymer uniquement.
 | `ozone-default-client` | `@taktik/ozone-client/default` |
 | `ozone-api-upload-v3` | `@taktik/ozone-client/upload` |
 
-Les anciens packages restent disponibles sur npmjs à leur dernière version, mais ne sont plus publiés.
+The old packages stay on npmjs at their last version, but are no longer published.
 
-## Développer
+## Installing
+
+The `@taktik` scope is served by the Taktik registry, so consumers need it routed:
+
+```
+@taktik:registry=https://npm.taktik.be/repository/npm/
+```
+
+## Developing
 
 ```bash
 nvm use          # Node 22
@@ -32,21 +40,21 @@ yarn build
 yarn test
 ```
 
-Les packages sont liés entre eux par les workspaces yarn : `@taktik/ozone-client` consomme le
-`@taktik/ozone-type` local, pas celui du registry.
+The packages are linked through yarn workspaces: `@taktik/ozone-client` builds against the local
+`@taktik/ozone-type`, not the published one.
 
-## Publier
+## Releasing
 
-Rien ne se publie depuis un poste de dev. Le build tourne sur taktik.ci
-([`ci/cloudbuild.yaml`](ci/cloudbuild.yaml)) et pousse sur `npm.taktik.be`.
+Nothing is published from a developer machine. The build runs on taktik.ci
+([`ci/cloudbuild.yaml`](ci/cloudbuild.yaml)) and pushes to `npm.taktik.be`.
 
-Les versions sont calculées par `git-version`, par chemin : un package dont le code n'a pas changé
-n'est pas republié.
+Versions are computed by `git-version` per path, so a package whose code has not changed is not
+republished.
 
-## Régénérer les types
+## Regenerating the types
 
-`@taktik/ozone-type` est généré depuis le swagger d'un serveur Ozone. Le `swagger.json` est versionné
-pour que la génération soit reproductible et que les diffs soient lisibles.
+`@taktik/ozone-type` is generated from the swagger of an Ozone server. The `swagger.json` is
+versioned so that regeneration is reproducible and its diff is readable.
 
 ```bash
 OZONE_PASSWORD=... ./scripts/generate-types.sh https://test.flowr.cloud/ozone
