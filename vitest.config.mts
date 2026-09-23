@@ -1,6 +1,20 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+	/*
+		ozone-client depends on ozone-type, whose package.json points at dist. Left
+		alone, the suite only runs once ozone-type has been built, which makes a
+		fresh clone fail in a way that has nothing to do with the tests. The alias
+		points at the source, the way the client's tsconfig paths does.
+	*/
+	resolve: {
+		alias: {
+			'@taktik/ozone-type': fileURLToPath(
+				new URL('./packages/ozone-type/ozone/index.ts', import.meta.url),
+			),
+		},
+	},
 	esbuild: {
 		/*
 			esbuild does not pick up experimentalDecorators from the package
@@ -16,9 +30,9 @@ export default defineConfig({
 		tsconfigRaw: {
 			compilerOptions: {
 				experimentalDecorators: true,
-				useDefineForClassFields: false
-			}
-		}
+				useDefineForClassFields: false,
+			},
+		},
 	},
 	test: {
 		/*
@@ -28,6 +42,6 @@ export default defineConfig({
 		*/
 		environment: 'jsdom',
 		globals: true,
-		include: ['packages/*/test/**/*.spec.ts']
-	}
+		include: ['packages/*/test/**/*.spec.ts'],
+	},
 })

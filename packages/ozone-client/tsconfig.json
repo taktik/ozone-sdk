@@ -7,6 +7,10 @@
 		"strict": true,
 		"noEmit": true,
 		"skipLibCheck": true,
+		"baseUrl": ".",
+		"paths": {
+			"@taktik/ozone-type": ["../ozone-type/ozone/index.ts"]
+		},
 		"types": ["vitest/globals"],
 		"strictNullChecks": true,
 		"noImplicitThis": true,
