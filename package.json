@@ -1,0 +1,18 @@
+{
+	"name": "ozone-sdk",
+	"private": true,
+	"license": "ISC",
+	"workspaces": [
+		"packages/*"
+	],
+	"engines": {
+		"node": ">=22"
+	},
+	"scripts": {
+		"build": "yarn workspace @taktik/ozone-type build && yarn workspace @taktik/ozone-client build",
+		"typecheck": "yarn workspace @taktik/ozone-type typecheck && yarn workspace @taktik/ozone-client typecheck",
+		"lint": "eslint packages --ext .ts",
+		"test": "vitest run",
+		"generate:types": "./scripts/generate-types.sh"
+	}
+}
