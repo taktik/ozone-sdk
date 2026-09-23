@@ -17,6 +17,11 @@
 			"types": "./dist/search.d.ts",
 			"import": "./dist/search.mjs",
 			"require": "./dist/search.js"
+		},
+		"./urls": {
+			"types": "./dist/urls.d.ts",
+			"import": "./dist/urls.mjs",
+			"require": "./dist/urls.js"
 		}
 	},
 	"files": [
