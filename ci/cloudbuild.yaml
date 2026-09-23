@@ -36,15 +36,14 @@ steps:
                 # Both packages take the one repo version, and ozone-client's dependency on
                 # ozone-type is rewritten to match: it is pinned exactly, so the published client
                 # would otherwise ask for whatever the working tree happens to say.
-                (cd packages/ozone-type && npm version "$$(cat ../../git.version)" --no-git-tag-version)
-                (cd packages/ozone-client && npm version "$$(cat ../../git.version)" --no-git-tag-version)
-                node -e "
-                    const fs = require('fs')
-                    const p = 'packages/ozone-client/package.json'
-                    const d = JSON.parse(fs.readFileSync(p, 'utf8'))
-                    d.dependencies['@taktik/ozone-type'] = fs.readFileSync('git.version', 'utf8').trim()
-                    fs.writeFileSync(p, JSON.stringify(d, null, '\t') + '\n')
-                "
+                #
+                # `npm pkg set` rather than `npm version`, which their file uses: npm version also
+                # refreshes the lockfile, and doing that here means resolving ozone-type at a
+                # version nothing has published yet. It is what a single-package repo can afford
+                # and this one cannot.
+                VERSION="$$(cat git.version)"
+                (cd packages/ozone-type && npm pkg set version="$$VERSION")
+                (cd packages/ozone-client && npm pkg set version="$$VERSION" "dependencies.@taktik/ozone-type=$$VERSION")
 
     -   id: 'publish'
         waitFor: [ 'build' ]
