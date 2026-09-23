@@ -1,15 +1,16 @@
 import { Grants } from '../model/models'
 
 export class FieldsPermissionUtility {
-
 	constructor(public grant: Grants) {}
 
 	hasFieldPermission(fieldName: string, permission: Grants.FieldGrantsEnum): boolean {
-		if (this.grant.fieldGrants && this.grant.fieldGrants.hasOwnProperty(fieldName)) {
-			return typeof (
-				this.grant.fieldGrants[fieldName]
-					.find(i => i === permission as any)
-			) === 'string'
+		if (
+			this.grant.fieldGrants &&
+			Object.prototype.hasOwnProperty.call(this.grant.fieldGrants, fieldName)
+		) {
+			return (
+				typeof this.grant.fieldGrants[fieldName].find((i) => i === (permission as any)) === 'string'
+			)
 		} else {
 			return false
 		}

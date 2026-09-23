@@ -1,23 +1,22 @@
 import { assert, expect } from 'chai'
 import { FieldDescriptor } from '@taktik/ozone-type'
-import sinon from 'sinon'
 import { fakeServer, FakeServer, FakeXMLHttpRequest } from 'nise'
 import { OzoneClient } from './../../src/index'
 import { Response } from 'typescript-http-client'
 
 describe('OzoneClient', () => {
-	const wait = (timeMs: number) => new Promise(resolve => setTimeout(resolve, timeMs))
+	const wait = (timeMs: number) => new Promise((resolve) => setTimeout(resolve, timeMs))
 	let client: OzoneClient.OzoneClient
 	let server: FakeServer
-	let responseHeaders = { json: { 'Content-Type': 'application/json' } }
-	let fields: FieldDescriptor[] = [{ identifier: 'aFiled',fieldType: 'aType' }]
-	let type = { fields: fields }
+	const responseHeaders = { json: { 'Content-Type': 'application/json' } }
+	const fields: FieldDescriptor[] = [{ identifier: 'aFiled', fieldType: 'aType' }]
+	const type = { fields: fields }
 
 	beforeAll(() => {
 		const credentials = new OzoneClient.UserCredentials('ozoneUser', 'ozonePassword')
 		const config: OzoneClient.ClientConfiguration = {
 			ozoneURL: `http://my.ozone.domain/ozone`,
-			ozoneCredentials: credentials
+			ozoneCredentials: credentials,
 		}
 		client = OzoneClient.newOzoneClient(config)
 	})
@@ -29,30 +28,21 @@ describe('OzoneClient', () => {
 			// for test, its not mandatory to start the client
 			// return client.start()
 			server = fakeServer.create()
-			server.respondWith(
-				'GET',
-				'http://my.ozone.domain/ozone/rest/v3/type/item',
-				[
-					200,
-					responseHeaders.json,
-					JSON.stringify(type)
-				])
-			server.respondWith(
-				'GET',
-				'http://my.ozone.domain/ozone/rest/v3/type/item-unknown',
-				[
-					404,
-					responseHeaders.json,
-					JSON.stringify(type)
-				])
-			server.respondWith(
-				'GET',
-				'http://my.ozone.domain/ozone/rest/v3/type/item-error',
-				[
-					500,
-					responseHeaders.json,
-					JSON.stringify(type)
-				])
+			server.respondWith('GET', 'http://my.ozone.domain/ozone/rest/v3/type/item', [
+				200,
+				responseHeaders.json,
+				JSON.stringify(type),
+			])
+			server.respondWith('GET', 'http://my.ozone.domain/ozone/rest/v3/type/item-unknown', [
+				404,
+				responseHeaders.json,
+				JSON.stringify(type),
+			])
+			server.respondWith('GET', 'http://my.ozone.domain/ozone/rest/v3/type/item-error', [
+				500,
+				responseHeaders.json,
+				JSON.stringify(type),
+			])
 		})
 		it('should resolve with item typeDescriptor', async () => {
 			const typeClient = client.typeClient()
@@ -73,7 +63,7 @@ describe('OzoneClient', () => {
 			const resp = typeClient.findByIdentifier('item-error')
 			server.respond()
 			try {
-				const typeDescriptor = await resp
+				const _typeDescriptor = await resp
 				assert.isTrue(false, 'previous line should throw an error')
 			} catch (response) {
 				assert.instanceOf(response, Response)
@@ -87,21 +77,18 @@ describe('OzoneClient', () => {
 			// for test, its not mandatory to start the client
 			// return client.start()
 			server = fakeServer.create()
-			server.respondWith(
-				'POST',
-				'http://my.ozone.domain/ozone/rest/v3/type',
-				[
-					200,
-					responseHeaders.json,
-					JSON.stringify({ identifier: 'newType',fields: fields })
-				])
+			server.respondWith('POST', 'http://my.ozone.domain/ozone/rest/v3/type', [
+				200,
+				responseHeaders.json,
+				JSON.stringify({ identifier: 'newType', fields: fields }),
+			])
 		})
 		it('should resolve with newType typeDescriptor', async () => {
 			const typeClient = client.typeClient()
-			const resp = typeClient.save({ identifier: 'newType',fields: fields })
+			const resp = typeClient.save({ identifier: 'newType', fields: fields })
 			server.respond()
 			const typeDescriptor = await resp
-			expect(typeDescriptor).to.deep.equal({ identifier: 'newType',fields: fields })
+			expect(typeDescriptor).to.deep.equal({ identifier: 'newType', fields: fields })
 		})
 	})
 	describe('findAll', () => {
@@ -109,21 +96,24 @@ describe('OzoneClient', () => {
 			// for test, its not mandatory to start the client
 			// return client.start()
 			server = fakeServer.create()
-			server.respondWith(
-				'GET',
-				'http://my.ozone.domain/ozone/rest/v3/type',
-				[
-					200,
-					responseHeaders.json,
-					JSON.stringify([{ identifier: 'type1',fields: fields }, { identifier: 'type2',fields: fields }])
-				])
+			server.respondWith('GET', 'http://my.ozone.domain/ozone/rest/v3/type', [
+				200,
+				responseHeaders.json,
+				JSON.stringify([
+					{ identifier: 'type1', fields: fields },
+					{ identifier: 'type2', fields: fields },
+				]),
+			])
 		})
 		it('should resolve with an array of typeDescriptor', async () => {
 			const typeClient = client.typeClient()
 			const resp = typeClient.findAll()
 			server.respond()
 			const typeDescriptor = await resp
-			expect(typeDescriptor).to.deep.equal([{ identifier: 'type1',fields: fields }, { identifier: 'type2',fields: fields }])
+			expect(typeDescriptor).to.deep.equal([
+				{ identifier: 'type1', fields: fields },
+				{ identifier: 'type2', fields: fields },
+			])
 		})
 	})
 	describe('delete', () => {
@@ -131,22 +121,16 @@ describe('OzoneClient', () => {
 			// for test, its not mandatory to start the client
 			// return client.start()
 			server = fakeServer.create()
-			server.respondWith(
-				'DELETE',
-				'http://my.ozone.domain/ozone/rest/v3/type/typeToDelete',
-				[
-					200,
-					responseHeaders.json,
-					'id'
-				])
-			server.respondWith(
-				'DELETE',
-				'http://my.ozone.domain/ozone/rest/v3/type/item-unknown',
-				[
-					404,
-					responseHeaders.json,
-					'id'
-				])
+			server.respondWith('DELETE', 'http://my.ozone.domain/ozone/rest/v3/type/typeToDelete', [
+				200,
+				responseHeaders.json,
+				'id',
+			])
+			server.respondWith('DELETE', 'http://my.ozone.domain/ozone/rest/v3/type/item-unknown', [
+				404,
+				responseHeaders.json,
+				'id',
+			])
 		})
 		it('should resolve with newType typeDescriptor', async () => {
 			const typeClient = client.typeClient()
@@ -166,7 +150,6 @@ describe('OzoneClient', () => {
 	})
 
 	describe('getTypeCache', () => {
-
 		describe('cache management', () => {
 			let serverResponseCount: number
 			beforeAll(() => {
@@ -181,25 +164,29 @@ describe('OzoneClient', () => {
 					/my.ozone.domain\/ozone\/rest\/v3\/type/,
 					(xhr: FakeXMLHttpRequest) => {
 						serverResponseCount++
-						xhr.respond(200, responseHeaders.json, JSON.stringify([
-							{ identifier: 'itemAllFields', superType: 'itemParent', fields: fields1 },
-							{ identifier: 'itemParent', fields: fields2 }
-						]))
-					}
+						xhr.respond(
+							200,
+							responseHeaders.json,
+							JSON.stringify([
+								{ identifier: 'itemAllFields', superType: 'itemParent', fields: fields1 },
+								{ identifier: 'itemParent', fields: fields2 },
+							]),
+						)
+					},
 				)
 			})
 			it('should request server information only once', async () => {
 				const typeClient = client.typeClient()
-				const typeCachePromise = typeClient.getTypeCache()
-				const typeCachePromise2 = typeClient.getTypeCache()
+				const first = typeClient.getTypeCache()
+				const second = typeClient.getTypeCache()
 				await wait(0)
 				server.respond()
-				expect(serverResponseCount).to.be.equal(1, 'server call mo,ne than once)')
+				expect(await first).to.equal(await second, 'both calls should share one cache')
+				expect(serverResponseCount).to.be.equal(1, 'the server should be asked only once')
 			})
 		})
 
 		describe('getAllFields', () => {
-
 			const fields1: FieldDescriptor[] = [{ identifier: 'aFiled', fieldType: 'aType' }]
 			const fields2: FieldDescriptor[] = [{ identifier: 'bFiled', fieldType: 'bType' }]
 
@@ -207,17 +194,14 @@ describe('OzoneClient', () => {
 				// for test, its not mandatory to start the client
 				// return client.start()
 				server = fakeServer.create()
-				server.respondWith(
-					'GET',
-					'http://my.ozone.domain/ozone/rest/v3/type',
-					[
-						200,
-						responseHeaders.json,
-						JSON.stringify([
-							{ identifier: 'itemAllFields', superType: 'itemParent', fields: fields1 },
-							{ identifier: 'itemParent', fields: fields2 }
-						])
-					])
+				server.respondWith('GET', 'http://my.ozone.domain/ozone/rest/v3/type', [
+					200,
+					responseHeaders.json,
+					JSON.stringify([
+						{ identifier: 'itemAllFields', superType: 'itemParent', fields: fields1 },
+						{ identifier: 'itemParent', fields: fields2 },
+					]),
+				])
 			})
 			it('should resolve with item fieldDescriptor', async () => {
 				const typeClient = client.typeClient()
@@ -225,28 +209,24 @@ describe('OzoneClient', () => {
 				await wait(0)
 				server.respond()
 				const typeCache = await typeCachePromise
-				const fields = typeCache.getAllFields('itemAllFields')
-				expect(fields).to.deep.equal([...fields1, ...fields2])
+				const allFields = typeCache.getAllFields('itemAllFields')
+				expect(allFields).to.deep.equal([...fields1, ...fields2])
 			})
 		})
 
 		describe('isTypeInstanceOf', () => {
-
-			beforeAll(async () => {
+			beforeAll(() => {
 				// for test, its not mandatory to start the client
 				// return client.start()
 				server = fakeServer.create()
-				server.respondWith(
-					'GET',
-					'http://my.ozone.domain/ozone/rest/v3/type',
-					[
-						200,
-						responseHeaders.json,
-						JSON.stringify([
-							{ identifier: 'itemInstance', superType: 'itemParent', fields: fields },
-							{ identifier: 'itemParent', fields: fields }
-						])
-					])
+				server.respondWith('GET', 'http://my.ozone.domain/ozone/rest/v3/type', [
+					200,
+					responseHeaders.json,
+					JSON.stringify([
+						{ identifier: 'itemInstance', superType: 'itemParent', fields: fields },
+						{ identifier: 'itemParent', fields: fields },
+					]),
+				])
 			})
 			it('should resolve with true when itemInstance is an instance of itemParent', async () => {
 				const typeClientCache = await client.typeClient().getTypeCache()
@@ -269,28 +249,28 @@ describe('OzoneClient', () => {
 		})
 
 		describe('refreshCache', () => {
-
 			const fields1: FieldDescriptor[] = [{ identifier: 'aFiled', fieldType: 'aType' }]
 			const fields2: FieldDescriptor[] = [{ identifier: 'bFiled', fieldType: 'bType' }]
 
-			const fields1AfterRefresh: FieldDescriptor[] = [{ identifier: 'aFiledAfterRefresh', fieldType: 'aTypeAfterRefresh' }]
-			const fields2AfterRefresh: FieldDescriptor[] = [{ identifier: 'bFiledAfterRefresh', fieldType: 'bTypeAfterRefresh' }]
+			const fields1AfterRefresh: FieldDescriptor[] = [
+				{ identifier: 'aFiledAfterRefresh', fieldType: 'aTypeAfterRefresh' },
+			]
+			const fields2AfterRefresh: FieldDescriptor[] = [
+				{ identifier: 'bFiledAfterRefresh', fieldType: 'bTypeAfterRefresh' },
+			]
 
 			beforeAll(() => {
 				// for test, its not mandatory to start the client
 				// return client.start()
 				server = fakeServer.create()
-				server.respondWith(
-					'GET',
-					'http://my.ozone.domain/ozone/rest/v3/type',
-					[
-						200,
-						responseHeaders.json,
-						JSON.stringify([
-							{ identifier: 'itemAllFields', superType: 'itemParent', fields: fields1 },
-							{ identifier: 'itemParent', fields: fields2 }
-						])
-					])
+				server.respondWith('GET', 'http://my.ozone.domain/ozone/rest/v3/type', [
+					200,
+					responseHeaders.json,
+					JSON.stringify([
+						{ identifier: 'itemAllFields', superType: 'itemParent', fields: fields1 },
+						{ identifier: 'itemParent', fields: fields2 },
+					]),
+				])
 			})
 			it('should resolve with item fieldDescriptor', async () => {
 				const typeClientCache = await client.typeClient().getTypeCache()
@@ -298,19 +278,16 @@ describe('OzoneClient', () => {
 				await wait(0)
 				server.respond()
 				const typeCache = await typeCachePromise
-				const fields = typeCache.getAllFields('itemAllFields')
-				expect(fields).to.deep.equal([...fields1, ...fields2])
-				server.respondWith(
-					'GET',
-					'http://my.ozone.domain/ozone/rest/v3/type',
-					[
-						200,
-						responseHeaders.json,
-						JSON.stringify([
-							{ identifier: 'itemAllFields', superType: 'itemParent', fields: fields1AfterRefresh },
-							{ identifier: 'itemParent', fields: fields2AfterRefresh }
-						])
-					])
+				const allFields = typeCache.getAllFields('itemAllFields')
+				expect(allFields).to.deep.equal([...fields1, ...fields2])
+				server.respondWith('GET', 'http://my.ozone.domain/ozone/rest/v3/type', [
+					200,
+					responseHeaders.json,
+					JSON.stringify([
+						{ identifier: 'itemAllFields', superType: 'itemParent', fields: fields1AfterRefresh },
+						{ identifier: 'itemParent', fields: fields2AfterRefresh },
+					]),
+				])
 				const typeCacheRefreshPromise = typeCache.refresh()
 				await wait(0)
 				server.respond()

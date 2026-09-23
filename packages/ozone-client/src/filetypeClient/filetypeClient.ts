@@ -1,7 +1,6 @@
-import { FileType, UUID, FromOzone } from '@taktik/ozone-type'
+import { FileType, UUID } from '@taktik/ozone-type'
 
 export interface FileTypeClient {
-
 	/**
 	 * Update or create a new type
 	 * @param type
@@ -37,7 +36,6 @@ export interface FileTypeClient {
 }
 
 export interface FileTypeCache {
-
 	fileTypes: FileType[]
 
 	/**

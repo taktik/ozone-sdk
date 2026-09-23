@@ -32,10 +32,10 @@ export type ImportBlobParams = {
 }
 const defaultImportBlobParams: ImportBlobParams = {
 	$type: 'importblobasmedia',
-	mediaInputChannel: 'inputChannel'
+	mediaInputChannel: 'inputChannel',
 }
 
-type Item = {file?: string, id?: string} & object
+type Item = { file?: string; id?: string } & object
 export class OzoneApiUploadV3<T extends Item = Item> {
 	private onStartUpload?: OnStartUploadFunction
 	private onEndBlobUpload?: OnEndBlobUploadFunction
@@ -54,20 +54,20 @@ export class OzoneApiUploadV3<T extends Item = Item> {
 	private metaData?: Partial<T>
 	private timeoutUpload?: number
 	constructor({
-					onStartUpload,
-					onEndBlobUpload,
-					onProgress,
-					createBlobMaxRetry = 5,
-					onErrorUploadMedia,
-					onEndUpload,
-					importBlobParams = defaultImportBlobParams,
-					importTaskMaxRetry = 10,
-					onEndImportBlobAsMedia,
-					setMedia,
-					collection,
-					checkIfMediaExists,
-					metaData,
-					timeoutUpload
+		onStartUpload,
+		onEndBlobUpload,
+		onProgress,
+		createBlobMaxRetry = 5,
+		onErrorUploadMedia,
+		onEndUpload,
+		importBlobParams = defaultImportBlobParams,
+		importTaskMaxRetry = 10,
+		onEndImportBlobAsMedia,
+		setMedia,
+		collection,
+		checkIfMediaExists,
+		metaData,
+		timeoutUpload,
 	}: {
 		onStartUpload?: OnStartUploadFunction
 		onEndBlobUpload?: OnEndBlobUploadFunction
@@ -101,9 +101,9 @@ export class OzoneApiUploadV3<T extends Item = Item> {
 	}
 
 	/* Create blob files and put import task in stack "importingTasks"
-     * @param files
-     * @private
-     */
+	 * @param files
+	 * @private
+	 */
 	private createBlobs(files: IUploadFile[]) {
 		files.forEach(({ id, file }) => {
 			this.onStartUpload?.({ id, percent: 0, file })
@@ -111,17 +111,19 @@ export class OzoneApiUploadV3<T extends Item = Item> {
 
 		const createBlobTask = async (file: File, id: string, attempt = 1): Promise<void> => {
 			try {
-				const blob = await getDefaultClient().blobClient().create(file, {
-					onprogress: this.onProgress?.(id),
-					timeout: this.timeoutUpload
-				})
+				const blob = await getDefaultClient()
+					.blobClient()
+					.create(file, {
+						onprogress: this.onProgress?.(id),
+						timeout: this.timeoutUpload,
+					})
 				this.onEndBlobUpload?.({ id: id })
 				this.importTaskQueue.push([() => this.submitBlobTask({ blob, file, id })])
-			} catch (err) {
+			} catch {
 				if (attempt >= this.createBlobMaxRetry) {
 					this.onErrorUploadMedia?.({
 						id,
-						error: UploadMediaError.UPLOAD
+						error: UploadMediaError.UPLOAD,
 					})
 				} else {
 					return createBlobTask(file, id, attempt + 1)
@@ -131,7 +133,7 @@ export class OzoneApiUploadV3<T extends Item = Item> {
 		const blobRequests = files.map(
 			({ file, id }) =>
 				() =>
-					createBlobTask(file, id)
+					createBlobTask(file, id),
 		)
 		this.blobQueue.push(blobRequests)
 	}
@@ -141,25 +143,34 @@ export class OzoneApiUploadV3<T extends Item = Item> {
 		if (!params) {
 			return Promise.resolve()
 		}
-		const media = {...{
-			name: params.file.name,
-			type: 'media'
-		}, ...(this.metaData ? this.metaData : {})}
+		const media = {
+			...{
+				name: params.file.name,
+				type: 'media',
+			},
+			...(this.metaData ? this.metaData : {}),
+		}
 
 		// retry scope is the task submission/wait ONLY: a failure while waiting on the
 		// thumbnails group must not re-submit the import task (the media already exists —
 		// a resubmit would import the blob a second time and create a duplicate media)
 		const submitAndWait = async (attempt = 1): Promise<ImportBlobAsMediaTaskResult | undefined> => {
 			try {
-				const taskId = await getDefaultClient().taskClient().submitTask(JSON.stringify({
-					$type: this.importBlobParams.$type,
-					blob: params.blob.id,
-					media,
-					mediaInputChannel: this.importBlobParams.mediaInputChannel
-				}))
-				return await getDefaultClient().taskClient().waitForTask<ImportBlobAsMediaTaskResult>(taskId, {
-					skipWaitingOnSubTask: true
-				}).waitResult
+				const taskId = await getDefaultClient()
+					.taskClient()
+					.submitTask(
+						JSON.stringify({
+							$type: this.importBlobParams.$type,
+							blob: params.blob.id,
+							media,
+							mediaInputChannel: this.importBlobParams.mediaInputChannel,
+						}),
+					)
+				return await getDefaultClient()
+					.taskClient()
+					.waitForTask<ImportBlobAsMediaTaskResult>(taskId, {
+						skipWaitingOnSubTask: true,
+					}).waitResult
 			} catch (err) {
 				console.log('Error submit upload task', err)
 				if (attempt >= this.importTaskMaxRetry) {
@@ -175,14 +186,14 @@ export class OzoneApiUploadV3<T extends Item = Item> {
 				if (fileId) {
 					this.onErrorUploadMedia?.({
 						id: fileId,
-						error: UploadMediaError.IMPORTING
+						error: UploadMediaError.IMPORTING,
 					})
 				}
 				return
 			}
 			this.onEndImportBlobAsMedia?.({
 				oldId: fileId,
-				newId: result.mediaId
+				newId: result.mediaId,
 			})
 			fileId = result.mediaId
 			try {
@@ -198,7 +209,7 @@ export class OzoneApiUploadV3<T extends Item = Item> {
 				console.log('Error waiting for media readiness', err)
 				this.onErrorUploadMedia?.({
 					id: fileId,
-					error: UploadMediaError.IMPORTING
+					error: UploadMediaError.IMPORTING,
 				})
 			}
 		}
@@ -242,7 +253,7 @@ export class OzoneApiUploadV3<T extends Item = Item> {
 	private waitUntilEndOfUpload(
 		task: string,
 		callBack?: ({ taskId }: { taskId?: string }) => void | Promise<void>,
-		onError?: ({ taskId }: { taskId?: string }) => void | Promise<void>
+		onError?: ({ taskId }: { taskId?: string }) => void | Promise<void>,
 	) {
 		const taskClient = getDefaultClient().taskClient()
 		const taskHandle = taskClient.waitForTask(task)
@@ -253,65 +264,82 @@ export class OzoneApiUploadV3<T extends Item = Item> {
 	private async getIfMediaExists(file: File): Promise<T | undefined> {
 		try {
 			if (this.checkIfMediaExists) {
-				const querySearchByName = new SearchQuery().and.termQuery('name', file.name).tenantQuery(this.checkIfMediaExists.mode ?? 'OWN_AND_PARENTS',this.checkIfMediaExists.tenant)
-				const { results: medias = [] } = await getDefaultClient().itemClient<T>(this.collection).search(querySearchByName.searchRequest)
-				if (!medias.length) { // not exists
+				const querySearchByName = new SearchQuery().and
+					.termQuery('name', file.name)
+					.tenantQuery(
+						this.checkIfMediaExists.mode ?? 'OWN_AND_PARENTS',
+						this.checkIfMediaExists.tenant,
+					)
+				const { results: medias = [] } = await getDefaultClient()
+					.itemClient<T>(this.collection)
+					.search(querySearchByName.searchRequest)
+				if (!medias.length) {
+					// not exists
 					return undefined
 				}
-				const fileIds = medias.map(media => media.file).filter(Boolean) as string[]
-				const files = (await getDefaultClient().itemClient<OzoneFile>('file').findAllByIds(fileIds)).filter(ozoneFile => !ozoneFile.deleted)
+				const fileIds = medias.map((media) => media.file).filter(Boolean) as string[]
+				const files = (
+					await getDefaultClient().itemClient<OzoneFile>('file').findAllByIds(fileIds)
+				).filter((ozoneFile) => !ozoneFile.deleted)
 				if (!files.length) {
 					return undefined
 				}
 				// the size check is async, so filter AFTER awaiting: filtering the pending
 				// promises keeps every entry (all truthy) and a null first slot would make
 				// the find below match a media with no file at all
-				const candidates = await Promise.all(files.map(async ozoneFile => {
-					if (ozoneFile.blob) {
-						const blob = await getDefaultClient().blobClient().getById(ozoneFile.blob)
-						if (blob?.size === file.size) {
-							return ozoneFile
+				const candidates = await Promise.all(
+					files.map(async (ozoneFile) => {
+						if (ozoneFile.blob) {
+							const blob = await getDefaultClient().blobClient().getById(ozoneFile.blob)
+							if (blob?.size === file.size) {
+								return ozoneFile
+							}
 						}
-					}
-					return null
-				}))
-				const existingFiles = candidates.filter((ozoneFile): ozoneFile is FromOzone<OzoneFile> => !!ozoneFile)
+						return null
+					}),
+				)
+				const existingFiles = candidates.filter(
+					(ozoneFile): ozoneFile is FromOzone<OzoneFile> => !!ozoneFile,
+				)
 				if (!existingFiles.length) {
 					return undefined
 				}
 				const matchedFile = existingFiles[0]
-				return medias.find(media => media.file === matchedFile.id)
+				return medias.find((media) => media.file === matchedFile.id)
 			}
 			return undefined
 		} catch (err) {
 			console.error('Error getting media if exists', err)
 			return undefined
 		}
-
 	}
 	/* Upload several medias
-     * Firstly start create blobs
-     * @param files
-     */
+	 * Firstly start create blobs
+	 * @param files
+	 */
 	uploadFiles(files: IUploadFile[]) {
-		Promise.all(files.map(async (file) => {
-			const mediaAlreadyExists = await this.getIfMediaExists(file.file)
-			if (mediaAlreadyExists) {
-				this.onEndImportBlobAsMedia?.({
-					oldId: file.id,
-					newId: mediaAlreadyExists.id
-				})
-				// same event order as the fresh-upload path: the media is delivered
-				// BEFORE the upload is declared over
-				this.setMedia(mediaAlreadyExists)
-				this.onEndUpload?.({ id: mediaAlreadyExists.id! })
-				return null // not create blob
-			}
-			return file
-		})).then((files) => {
-			this.createBlobs(files.filter(file => file) as IUploadFile[])
-		}).catch(err => {
-			console.error('Error uploading medias', err)
-		})
+		Promise.all(
+			files.map(async (file) => {
+				const mediaAlreadyExists = await this.getIfMediaExists(file.file)
+				if (mediaAlreadyExists) {
+					this.onEndImportBlobAsMedia?.({
+						oldId: file.id,
+						newId: mediaAlreadyExists.id,
+					})
+					// same event order as the fresh-upload path: the media is delivered
+					// BEFORE the upload is declared over
+					this.setMedia(mediaAlreadyExists)
+					this.onEndUpload?.({ id: mediaAlreadyExists.id! })
+					return null // not create blob
+				}
+				return file
+			}),
+		)
+			.then((files) => {
+				this.createBlobs(files.filter((file) => file) as IUploadFile[])
+			})
+			.catch((err) => {
+				console.error('Error uploading medias', err)
+			})
 	}
 }

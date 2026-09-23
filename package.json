@@ -11,9 +11,11 @@
 	"scripts": {
 		"build": "yarn workspace @taktik/ozone-type build && yarn workspace @taktik/ozone-client build",
 		"typecheck": "yarn workspace @taktik/ozone-type typecheck && yarn workspace @taktik/ozone-client typecheck",
-		"lint": "eslint packages --ext .ts",
+		"lint": "eslint packages *.mjs *.mts",
 		"test": "vitest run",
-		"test:watch": "vitest"
+		"test:watch": "vitest",
+		"format": "prettier --write \"packages/*/{src,test}/**/*.ts\" \"*.{ts,mts,mjs,json,md}\"",
+		"prepare": "husky"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

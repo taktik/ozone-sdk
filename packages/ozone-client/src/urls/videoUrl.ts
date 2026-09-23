@@ -10,7 +10,6 @@ import { OzoneMediaUrl } from './mediaUrl'
  * JavaScript class to convert media ID to URL
  */
 export class OzoneVideoUrl extends OzoneMediaUrl {
-
 	video: OzoneType.FromOzone<OzoneType.Video>
 	private _client: OzoneClient
 
@@ -22,8 +21,8 @@ export class OzoneVideoUrl extends OzoneMediaUrl {
 
 	private async _getVideoFileType(): Promise<Array<OzoneType.FileType>> {
 		const fileTypeCache = await this._client.fileTypeClient().getFileTypeCache()
-		const videoFormat = OzoneFormat.priority.video.map(key => OzoneFormat.type[key])
-		return fileTypeCache.fileTypes.filter(ft => videoFormat.includes(ft.identifier))
+		const videoFormat = OzoneFormat.priority.video.map((key) => OzoneFormat.type[key])
+		return fileTypeCache.fileTypes.filter((ft) => videoFormat.includes(ft.identifier))
 	}
 
 	private _preferredVideoFormat?: string
@@ -43,9 +42,8 @@ export class OzoneVideoUrl extends OzoneMediaUrl {
 
 		const videoFileTypes = await this._getVideoFileType()
 
-		for (let format of OzoneFormat.priority.video) {
+		for (const format of OzoneFormat.priority.video) {
 			const ressourceToUse = availableRessources.find((ressource) => {
-
 				const fileType = videoFileTypes.find((videoFileType) => {
 					if (videoFileType && videoFileType.id) {
 						return videoFileType.id === ressource.fileType
@@ -60,7 +58,7 @@ export class OzoneVideoUrl extends OzoneMediaUrl {
 				const fileTypeToUse = videoFileTypes.find((videoFileType) => {
 					return videoFileType.id === ressourceToUse.fileType
 				})
-				if (fileTypeToUse && fileTypeToUse.identifier) {
+				if (fileTypeToUse?.identifier) {
 					this._preferredVideoFormat = fileTypeToUse.identifier
 					return this._preferredVideoFormat
 				}
@@ -79,5 +77,4 @@ export class OzoneVideoUrl extends OzoneMediaUrl {
 			throw new Error('Video Format is undefined')
 		}
 	}
-
 }

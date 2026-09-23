@@ -6,10 +6,12 @@ import { TypeClient } from './typeClient'
 export type TypeDescriptorCollection = Map<string, Promise<TypeDescriptor>>
 
 export class TypeCacheImpl implements TypeCache {
-
 	private _cache = new Cache<string, TypeDescriptor>()
 
-	constructor(private _typeClient: TypeClient, typeDescriptors: TypeDescriptor[]) {
+	constructor(
+		private _typeClient: TypeClient,
+		typeDescriptors: TypeDescriptor[],
+	) {
 		this.updateCache(typeDescriptors)
 	}
 
@@ -19,35 +21,32 @@ export class TypeCacheImpl implements TypeCache {
 			throw new Error('Type not found in cache : ' + identifier)
 		}
 		let parentFields: FieldDescriptor[] = []
-		let traitFields: FieldDescriptor[] = []
-		let embedFields: FieldDescriptor[] = []
+		const traitFields: FieldDescriptor[] = []
+		const embedFields: FieldDescriptor[] = []
 		if (type.superType) {
 			parentFields = this.getAllFields(type.superType, withEmbeddedFields)
 		}
 		if (type.traits && type.traits.length > 0) {
-			type.traits.forEach(trait => traitFields.push(...this.getAllFields(trait, withEmbeddedFields)))
+			type.traits.forEach((trait) =>
+				traitFields.push(...this.getAllFields(trait, withEmbeddedFields)),
+			)
 		}
 
 		const fields = type.fields || []
 
 		if (withEmbeddedFields) {
-			fields.forEach(field => {
+			fields.forEach((field) => {
 				const embedType = TypeCacheImpl.getEmbeddedType(field.fieldType)
 				if (embedType && this.has(embedType)) {
-					const embeddedFields = this.getAllFields(embedType, withEmbeddedFields).map(f => ({
+					const embeddedFields = this.getAllFields(embedType, withEmbeddedFields).map((f) => ({
 						...f,
-						identifier: `${field.identifier}/${f.identifier}`
+						identifier: `${field.identifier}/${f.identifier}`,
 					}))
 					embedFields.push(...embeddedFields)
 				}
 			})
 		}
-		return uniqBy([
-			...fields,
-			...parentFields,
-			...traitFields,
-			...embedFields
-		], 'identifier')
+		return uniqBy([...fields, ...parentFields, ...traitFields, ...embedFields], 'identifier')
 	}
 
 	static getEmbeddedType(fieldType: string): string | undefined {
@@ -69,7 +68,7 @@ export class TypeCacheImpl implements TypeCache {
 				parentsToCheck.push(typeDescriptor.superType)
 			}
 			parentsToCheck.push(...(typeDescriptor.traits || []))
-			return parentsToCheck.some(identifier => this.isTypeInstanceOf(identifier, instance))
+			return parentsToCheck.some((identifier) => this.isTypeInstanceOf(identifier, instance))
 		}
 	}
 
@@ -105,7 +104,8 @@ export class TypeCacheImpl implements TypeCache {
 
 	private updateCache(typeDescriptors: TypeDescriptor[]) {
 		this._cache.clear()
-		typeDescriptors.forEach(typeDescriptor =>
-			this._cache.set(typeDescriptor.identifier, typeDescriptor))
+		typeDescriptors.forEach((typeDescriptor) =>
+			this._cache.set(typeDescriptor.identifier, typeDescriptor),
+		)
 	}
 }

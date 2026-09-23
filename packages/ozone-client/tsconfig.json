@@ -5,27 +5,13 @@
 		"moduleResolution": "node",
 		"experimentalDecorators": true,
 		"strict": true,
+		"noEmit": true,
+		"skipLibCheck": true,
+		"types": ["vitest/globals"],
 		"strictNullChecks": true,
 		"noImplicitThis": true,
 		"allowSyntheticDefaultImports": true,
-		"lib": [
-			"es2017",
-			"es2015",
-			"es6",
-			"es5",
-			"dom",
-			"esnext"
-		],
-		"declaration": true,
-		"sourceMap": true,
-		"rootDir": "./src",
-		"outDir": "./dist"
+		"lib": ["es2017", "es2015", "es6", "es5", "dom", "esnext"]
 	},
-	"files": [
-		"./src/index.ts",
-		"./src/search/index.ts",
-		"./src/urls/index.ts",
-		"./src/default/index.ts",
-		"./src/upload/index.ts"
-	]
+	"include": ["src", "test", "tsup.config.ts"]
 }

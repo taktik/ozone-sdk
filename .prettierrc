@@ -1,7 +1,8 @@
 {
-	"useTabs": true,
 	"semi": false,
 	"singleQuote": true,
-	"printWidth": 120,
-	"trailingComma": "none"
+	"proseWrap": "always",
+	"printWidth": 100,
+	"htmlWhitespaceSensitivity": "ignore",
+	"useTabs": true
 }

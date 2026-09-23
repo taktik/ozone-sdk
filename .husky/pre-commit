@@ -1,0 +1,12 @@
+# git runs hooks with whatever node is first on PATH, which is not necessarily
+# the one in .nvmrc -- and lint-staged needs the version this repo targets.
+# husky runs this with `sh -e`, and sourcing nvm.sh trips that on its way
+# through, so -e comes off for the load and back on after.
+if [ -s "$HOME/.nvm/nvm.sh" ]; then
+	set +e
+	. "$HOME/.nvm/nvm.sh"
+	nvm use > /dev/null 2>&1
+	set -e
+fi
+
+npx lint-staged

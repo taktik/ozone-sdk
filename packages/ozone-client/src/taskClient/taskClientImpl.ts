@@ -4,7 +4,10 @@ import { OzoneClient } from '../ozoneClient/ozoneClient'
 import { Request } from 'typescript-http-client'
 
 export class TaskClientImpl implements TaskClient {
-	constructor(private client: OzoneClient, private baseUrl: string) {}
+	constructor(
+		private client: OzoneClient,
+		private baseUrl: string,
+	) {}
 
 	waitForTask<T>(taskId: UUID, options?: TaskHandlerOption): TaskHandlerImpl {
 		return new TaskHandlerImpl<T>(taskId, this.client, this.baseUrl, options || {})
@@ -12,15 +15,13 @@ export class TaskClientImpl implements TaskClient {
 
 	submitTask(body: string): Promise<UUID> {
 		const url = `${this.baseUrl}/rest/v3/task`
-		const request = new Request(url)
-			.setMethod('POST').setBody(body)
+		const request = new Request(url).setMethod('POST').setBody(body)
 		return this.client.call<UUID>(request)
 	}
 }
 const waitingTime = 10000 // ms
 
 export class TaskHandlerImpl<T = any> implements TaskHandler {
-
 	onFinish?: (taskExecution: TaskExecution) => void
 
 	onError?: (taskExecution: TaskExecution) => void
@@ -47,20 +48,28 @@ export class TaskHandlerImpl<T = any> implements TaskHandler {
 		clearTimeout(this.subTimeout)
 	}
 
-	private executeCallback(callback: ((taskExecution: TaskExecution) => void) | undefined, param: TaskExecution) {
+	private executeCallback(
+		callback: ((taskExecution: TaskExecution) => void) | undefined,
+		param: TaskExecution,
+	) {
 		if (callback) {
 			setTimeout(() => callback(param))
 		}
 	}
 	readonly waitResult: Promise<T | undefined>
 
-	constructor(taskId: string, private client: OzoneClient, private baseUrl: string, private options: TaskHandlerOption) {
+	constructor(
+		taskId: string,
+		private client: OzoneClient,
+		private baseUrl: string,
+		private options: TaskHandlerOption,
+	) {
 		this.pollInterval = options.pollInterval || 500
 		this.waitResult = this._waitForTask(taskId)
 	}
 
 	private _waitForSubTasks(asyncTasksGroupId: string): Promise<void> {
-		return (new Promise((resolve, reject) => {
+		return new Promise((resolve, reject) => {
 			const wait = () => {
 				this.subTimeout = window.setTimeout(() => {
 					this._awaitTask(asyncTasksGroupId)
@@ -81,24 +90,23 @@ export class TaskHandlerImpl<T = any> implements TaskHandler {
 				}, this.pollInterval)
 			}
 			wait()
-		}))
+		})
 	}
 	private _waitForTask<T>(taskId: string): Promise<T | undefined> {
 		let primaryTaskResult: TaskExecution
-		return (new Promise<TaskExecution>((resolve, reject) => {
+		return new Promise<TaskExecution>((resolve, reject) => {
 			this.rejectPromise = reject
 			const wait = () => {
 				this.timeout = window.setTimeout(() => {
 					this._awaitTask(taskId)
 						.then((data: GroupExecution) => {
-							if (data && data.taskExecutions) {
+							if (data?.taskExecutions) {
 								const taskExecution: TaskExecution = data.taskExecutions[taskId]
 								this.executeCallback(this.onProgress, taskExecution)
 								if (data.hasErrors) {
 									this.executeCallback(this.onError, taskExecution)
 									clearTimeout(this.timeout)
 									reject(Error(taskExecution.error || 'Error in ozone task'))
-
 								} else if (data.stepsDone === data.stepsCount) {
 									this._clearPullTimeout()
 									primaryTaskResult = taskExecution
@@ -115,11 +123,9 @@ export class TaskHandlerImpl<T = any> implements TaskHandler {
 				}, this.pollInterval)
 			}
 			wait()
-		}))
+		})
 			.then((taskResult: TaskExecution): Promise<void> | undefined => {
-				if (!this.options.skipWaitingOnSubTask
-					&& taskResult.taskResult
-					&& taskResult.taskResult.asyncTasksGroupId) {
+				if (!this.options.skipWaitingOnSubTask && taskResult.taskResult?.asyncTasksGroupId) {
 					return this._waitForSubTasks(taskResult.taskResult.asyncTasksGroupId)
 				}
 			})
@@ -131,8 +137,7 @@ export class TaskHandlerImpl<T = any> implements TaskHandler {
 
 	private async _awaitTask(taskId: string): Promise<GroupExecution> {
 		const url = `${this.baseUrl}/rest/v3/task/wait/${taskId}/${waitingTime}`
-		const request = new Request(url)
-			.setMethod('GET')
+		const request = new Request(url).setMethod('GET')
 		return this.client.call<GroupExecution>(request)
 	}
 }

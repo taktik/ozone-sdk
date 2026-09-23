@@ -1,8 +1,21 @@
 /**
  * Created by hubert on 8/06/17.
  */
-import { SearchRequest, TermsAggregation, Query, BoolQuery, Sort } from '@taktik/ozone-type'
-import { existsQuery, idsQuery, quicksearch, rangeQuery, regexpQuery, tenantQuery, termQuery, termsQuery, termsQueryOptions, typeQuery, typeQueryWithSubType, wildcardQuery } from './functions'
+import { SearchRequest, Query, BoolQuery, Sort } from '@taktik/ozone-type'
+import {
+	existsQuery,
+	idsQuery,
+	quicksearch,
+	rangeQuery,
+	regexpQuery,
+	tenantQuery,
+	termQuery,
+	termsQuery,
+	termsQueryOptions,
+	typeQuery,
+	typeQueryWithSubType,
+	wildcardQuery,
+} from './functions'
 import { BoolQueryName } from './types'
 type SearchModeEnum = SearchRequest.SearchModeEnum
 
@@ -46,10 +59,10 @@ type SearchModeEnum = SearchRequest.SearchModeEnum
  */
 export class SearchQuery {
 	_searchRequest: SearchRequest = {
-		size: 10
+		size: 10,
 	}
 
-	_collection ?: string
+	_collection?: string
 
 	/**
 	 * Set collection to search on.
@@ -68,12 +81,16 @@ export class SearchQuery {
 	get collection(): string | undefined {
 		return this._collection
 	}
-	get searchQuery () { return JSON.stringify(this._searchRequest) }
+	get searchQuery() {
+		return JSON.stringify(this._searchRequest)
+	}
 
 	/**
 	 * searchRequest getter
 	 */
-	get searchRequest (): SearchRequest { return this._searchRequest }
+	get searchRequest(): SearchRequest {
+		return this._searchRequest
+	}
 
 	/**
 	 * create boolQuery mustClauses.
@@ -144,10 +161,12 @@ export class SearchQuery {
 	 * @return {this}
 	 */
 	boolQuery(kind: BoolQueryName): this {
-		const currentQuery = this._searchRequest.query ? Object.assign({}, this._searchRequest.query) : undefined
+		const currentQuery = this._searchRequest.query
+			? Object.assign({}, this._searchRequest.query)
+			: undefined
 		this._searchRequest.query = {
-			'$type': 'BoolQuery'
-		} as BoolQuery
+			$type: 'BoolQuery',
+		}
 
 		this._searchRequest.query[kind] = []
 		if (currentQuery) {
@@ -162,7 +181,7 @@ export class SearchQuery {
 	 * @param searchQuery
 	 */
 	combineWith(searchQuery: SearchQuery): this {
-		if (searchQuery._searchRequest && searchQuery._searchRequest.query) {
+		if (searchQuery._searchRequest?.query) {
 			this.addQuery(searchQuery._searchRequest.query)
 			return this
 		}
@@ -180,14 +199,16 @@ export class SearchQuery {
 	suggestion(searchString: string, lastTerm: string = '', size?: number): this {
 		const suggestSize = size || this._searchRequest.size
 
-		this._searchRequest.aggregations = [{
-			'$type': 'TermsAggregation',
-			name: 'suggest',
-			field: '_quicksearch',
-			order: 'COUNT_DESC',
-			size: suggestSize,
-			includePattern: `${lastTerm}.*`
-		} as TermsAggregation]
+		this._searchRequest.aggregations = [
+			{
+				$type: 'TermsAggregation',
+				name: 'suggest',
+				field: '_quicksearch',
+				order: 'COUNT_DESC',
+				size: suggestSize,
+				includePattern: `${lastTerm}.*`,
+			},
+		]
 
 		return this.quicksearch(searchString)
 	}
@@ -221,7 +242,7 @@ export class SearchQuery {
 	 */
 	addQuery(query: Query): this {
 		if (this._searchRequest.query && this._searchRequest.query.$type === 'BoolQuery') {
-			const currentQuery = (this._searchRequest.query as BoolQuery)
+			const currentQuery = this._searchRequest.query as BoolQuery
 			if (currentQuery.mustClauses) {
 				currentQuery.mustClauses.push(query)
 			} else if (currentQuery.shouldClauses) {
@@ -248,7 +269,7 @@ export class SearchQuery {
 		this._searchRequest.sorts = this._searchRequest.sorts || []
 		this._searchRequest.sorts.push({
 			field,
-			order
+			order,
 		})
 		return this
 	}
@@ -262,7 +283,6 @@ export class SearchQuery {
 	order(field: string): OrderRequest {
 		return new OrderRequest(this, field)
 	}
-
 }
 export class OrderRequest {
 	request: SearchQuery
@@ -271,8 +291,13 @@ export class OrderRequest {
 		this.request = request
 		this.field = field
 	}
-	get ASC (): SearchQuery { return this.request.addOrderOn(this.field, 'ASC' as any) }
-	get DESC (): SearchQuery { return this.request.addOrderOn(this.field, 'DESC'as any) }
-	get NONE (): SearchQuery { return this.request.addOrderOn(this.field, 'NONE'as any) }
-
+	get ASC(): SearchQuery {
+		return this.request.addOrderOn(this.field, 'ASC')
+	}
+	get DESC(): SearchQuery {
+		return this.request.addOrderOn(this.field, 'DESC')
+	}
+	get NONE(): SearchQuery {
+		return this.request.addOrderOn(this.field, 'NONE')
+	}
 }

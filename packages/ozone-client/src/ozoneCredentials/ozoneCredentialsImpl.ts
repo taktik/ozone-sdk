@@ -2,19 +2,17 @@ import { Response, Request, newHttpClient, Headers } from 'typescript-http-clien
 import { AuthInfo, OzoneCredentials } from '../ozoneClient/ozoneClient'
 
 export class SessionCredentials implements OzoneCredentials {
-	constructor(readonly headers?: Headers) {
-	}
+	constructor(readonly headers?: Headers) {}
 
 	async authenticate(ozoneURL: string): Promise<AuthInfo> {
 		const httpClient = newHttpClient()
-		const request = new Request(`${ozoneURL}/rest/v3/authentication/current/session`)
-			.set({
-				method: 'GET',
-				withCredentials: true,
-				headers: this.headers
-			})
-		let authInfo = await (httpClient.call<AuthInfo>(request))
-		if (!authInfo || !authInfo.principalId) {
+		const request = new Request(`${ozoneURL}/rest/v3/authentication/current/session`).set({
+			method: 'GET',
+			withCredentials: true,
+			headers: this.headers,
+		})
+		const authInfo = await httpClient.call<AuthInfo>(request)
+		if (!authInfo?.principalId) {
 			// The session is invalid
 			throw new Response<AuthInfo>(request, 403, 'Invalid session', {}, authInfo)
 		}
@@ -23,91 +21,94 @@ export class SessionCredentials implements OzoneCredentials {
 }
 
 export class UserCredentials implements OzoneCredentials {
-	constructor(readonly username: string,
-				readonly password: string,
-				readonly setSessionCookie = true,
-				readonly headers?: Headers) {
-	}
+	constructor(
+		readonly username: string,
+		readonly password: string,
+		readonly setSessionCookie = true,
+		readonly headers?: Headers,
+	) {}
 
 	authenticate(ozoneURL: string): Promise<AuthInfo> {
 		const httpClient = newHttpClient()
-		const request = new Request(`${ozoneURL}/rest/v3/authentication/login/user?cookie=${this.setSessionCookie}`)
-			.set({
-				method: 'POST',
-				body: {
-					username: this.username,
-					password: this.password
-				},
-				headers: this.headers
-			})
+		const request = new Request(
+			`${ozoneURL}/rest/v3/authentication/login/user?cookie=${this.setSessionCookie}`,
+		).set({
+			method: 'POST',
+			body: {
+				username: this.username,
+				password: this.password,
+			},
+			headers: this.headers,
+		})
 		return httpClient.call<AuthInfo>(request)
 	}
 }
 
 export class TokenCredentials implements OzoneCredentials {
-	constructor(readonly token: string,
-				readonly headers?: Headers) {
-	}
+	constructor(
+		readonly token: string,
+		readonly headers?: Headers,
+	) {}
 
 	authenticate(ozoneURL: string): Promise<AuthInfo> {
 		const httpClient = newHttpClient()
-		const request = new Request(`${ozoneURL}/rest/v3/authentication/login/token?cookie=false`)
-			.set({
-				method: 'POST',
-				body: {
-					token: this.token
-				},
-				headers: this.headers
-			})
+		const request = new Request(`${ozoneURL}/rest/v3/authentication/login/token?cookie=false`).set({
+			method: 'POST',
+			body: {
+				token: this.token,
+			},
+			headers: this.headers,
+		})
 		return httpClient.call<AuthInfo>(request)
 	}
 }
 
 export class ItemCredentials implements OzoneCredentials {
-	constructor(readonly itemId: string,
-				readonly secret: string,
-				readonly setSessionCookie = true,
-				readonly headers?: Headers
-				) {
-	}
+	constructor(
+		readonly itemId: string,
+		readonly secret: string,
+		readonly setSessionCookie = true,
+		readonly headers?: Headers,
+	) {}
 
 	authenticate(ozoneURL: string): Promise<AuthInfo> {
 		const httpClient = newHttpClient()
-		const request = new Request(`${ozoneURL}/rest/v3/authentication/login/item?cookie=${this.setSessionCookie}`)
-			.set({
-				method: 'POST',
-				body: {
-					itemId: this.itemId,
-					secret: this.secret
-				},
-				headers: this.headers
-			})
-		return (httpClient.call(request))
+		const request = new Request(
+			`${ozoneURL}/rest/v3/authentication/login/item?cookie=${this.setSessionCookie}`,
+		).set({
+			method: 'POST',
+			body: {
+				itemId: this.itemId,
+				secret: this.secret,
+			},
+			headers: this.headers,
+		})
+		return httpClient.call(request)
 	}
 }
 
 export class ItemByQueryCredentials implements OzoneCredentials {
-
-	constructor(readonly typeIdentifier: string,
-				readonly secret: string,
-				readonly query: object,
-				readonly setSessionCookie = true,
-				readonly headers?: Headers
-				) {
-	}
+	constructor(
+		readonly typeIdentifier: string,
+		readonly secret: string,
+		readonly query: object,
+		readonly setSessionCookie = true,
+		readonly headers?: Headers,
+	) {}
 
 	async authenticate(ozoneURL: string): Promise<AuthInfo> {
 		const httpClient = newHttpClient()
-		const request = new Request(`${ozoneURL}/rest/v3/authentication/login/item/${this.typeIdentifier}?cookie=${this.setSessionCookie}`)
-			.set({
-				method: 'POST',
-				body: {
-					query: this.query,
-					secret: this.secret
-				},
-				headers: this.headers
-			})
-		return (httpClient.call<AuthInfo>(request))
+		const request = new Request(
+			`${ozoneURL}/rest/v3/authentication/login/item/${this.typeIdentifier}?cookie=${this.setSessionCookie}`,
+		).set({
+			method: 'POST',
+			body: {
+				query: this.query,
+				secret: this.secret,
+			},
+			headers: this.headers,
+		})
+		return httpClient.call<AuthInfo>(request)
 	}
 }
 
@@ -125,7 +126,9 @@ export class OzoneLoginCredentials extends SessionCredentials {
 			loginUrl.searchParams.set('target', window.location.href)
 			window.location.replace(loginUrl.href)
 		} else {
-			throw Error('Not in a browser, redirection can\'t be performed. You probably want to use another type of OzoneCredentials.')
+			throw Error(
+				"Not in a browser, redirection can't be performed. You probably want to use another type of OzoneCredentials.",
+			)
 		}
 	}
 

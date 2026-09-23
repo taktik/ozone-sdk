@@ -7,17 +7,17 @@ import { FiletypeCacheImpl } from './../../src/filetypeClient/filetypeClientImpl
 import { Response } from 'typescript-http-client'
 
 describe('OzoneClient', () => {
-	const wait = (timeMs: number) => new Promise(resolve => setTimeout(resolve, timeMs))
+	const wait = (timeMs: number) => new Promise((resolve) => setTimeout(resolve, timeMs))
 	let client: OzoneClient.OzoneClient
 	let server: FakeServer
-	let responseHeaders = { json: { 'Content-Type': 'application/json' } }
-	let fileType = { id: 'xxx-yyy', identifier: 'an-identifier' }
+	const responseHeaders = { json: { 'Content-Type': 'application/json' } }
+	const fileType = { id: 'xxx-yyy', identifier: 'an-identifier' }
 
 	beforeAll(() => {
 		const credentials = new OzoneClient.UserCredentials('ozoneUser', 'ozonePassword')
 		const config: OzoneClient.ClientConfiguration = {
 			ozoneURL: `http://my.ozone.domain/ozone`,
-			ozoneCredentials: credentials
+			ozoneCredentials: credentials,
 		}
 		client = OzoneClient.newOzoneClient(config)
 	})
@@ -32,27 +32,18 @@ describe('OzoneClient', () => {
 			server.respondWith(
 				'GET',
 				'http://my.ozone.domain/ozone/rest/v3/filetype/identifier/an-identifier',
-				[
-					200,
-					responseHeaders.json,
-					JSON.stringify(fileType)
-				])
+				[200, responseHeaders.json, JSON.stringify(fileType)],
+			)
 			server.respondWith(
 				'GET',
 				'http://my.ozone.domain/ozone/rest/v3/filetype/identifier/identifier-unknown',
-				[
-					404,
-					responseHeaders.json,
-					JSON.stringify(fileType)
-				])
+				[404, responseHeaders.json, JSON.stringify(fileType)],
+			)
 			server.respondWith(
 				'GET',
 				'http://my.ozone.domain/ozone/rest/v3/filetype/identifier/identifier-error',
-				[
-					500,
-					responseHeaders.json,
-					JSON.stringify(fileType)
-				])
+				[500, responseHeaders.json, JSON.stringify(fileType)],
+			)
 		})
 		it('should resolve with item ozone fileType', async () => {
 			const fileTypeClient = client.fileTypeClient()
@@ -73,7 +64,7 @@ describe('OzoneClient', () => {
 			const resp = fileTypeClient.findByIdentifier('identifier-error')
 			server.respond()
 			try {
-				const typeDescriptor = await resp
+				const _typeDescriptor = await resp
 				assert.isTrue(false, 'previous line should throw an error')
 			} catch (response) {
 				assert.instanceOf(response, Response)
@@ -87,14 +78,11 @@ describe('OzoneClient', () => {
 			// for test, its not mandatory to start the client
 			// return client.start()
 			server = fakeServer.create()
-			server.respondWith(
-				'POST',
-				'http://my.ozone.domain/ozone/rest/v3/filetype',
-				[
-					200,
-					responseHeaders.json,
-					JSON.stringify({ identifier: 'newType',id: 'aaa-bbb' })
-				])
+			server.respondWith('POST', 'http://my.ozone.domain/ozone/rest/v3/filetype', [
+				200,
+				responseHeaders.json,
+				JSON.stringify({ identifier: 'newType', id: 'aaa-bbb' }),
+			])
 		})
 		it('should resolve with newType fileType', async () => {
 			const fileTypeClient = client.fileTypeClient()
@@ -109,21 +97,24 @@ describe('OzoneClient', () => {
 			// for test, its not mandatory to start the client
 			// return client.start()
 			server = fakeServer.create()
-			server.respondWith(
-				'GET',
-				'http://my.ozone.domain/ozone/rest/v3/filetype',
-				[
-					200,
-					responseHeaders.json,
-					JSON.stringify([{ identifier: 'type1', id: 'aaa-bbb' }, { identifier: 'type2', id: 'ccc-ddd' }])
-				])
+			server.respondWith('GET', 'http://my.ozone.domain/ozone/rest/v3/filetype', [
+				200,
+				responseHeaders.json,
+				JSON.stringify([
+					{ identifier: 'type1', id: 'aaa-bbb' },
+					{ identifier: 'type2', id: 'ccc-ddd' },
+				]),
+			])
 		})
 		it('should resolve with an array of fileType', async () => {
 			const fileTypeClient = client.fileTypeClient()
 			const resp = fileTypeClient.findAll()
 			server.respond()
 			const typeDescriptor = await resp
-			expect(typeDescriptor).to.deep.equal([{ identifier: 'type1', id: 'aaa-bbb' }, { identifier: 'type2', id: 'ccc-ddd' }])
+			expect(typeDescriptor).to.deep.equal([
+				{ identifier: 'type1', id: 'aaa-bbb' },
+				{ identifier: 'type2', id: 'ccc-ddd' },
+			])
 		})
 	})
 	describe('delete', () => {
@@ -131,22 +122,16 @@ describe('OzoneClient', () => {
 			// for test, its not mandatory to start the client
 			// return client.start()
 			server = fakeServer.create()
-			server.respondWith(
-				'DELETE',
-				'http://my.ozone.domain/ozone/rest/v3/filetype/typeToDelete',
-				[
-					200,
-					responseHeaders.json,
-					'id'
-				])
-			server.respondWith(
-				'DELETE',
-				'http://my.ozone.domain/ozone/rest/v3/filetype/item-unknown',
-				[
-					404,
-					responseHeaders.json,
-					'id'
-				])
+			server.respondWith('DELETE', 'http://my.ozone.domain/ozone/rest/v3/filetype/typeToDelete', [
+				200,
+				responseHeaders.json,
+				'id',
+			])
+			server.respondWith('DELETE', 'http://my.ozone.domain/ozone/rest/v3/filetype/item-unknown', [
+				404,
+				responseHeaders.json,
+				'id',
+			])
 		})
 		it('should resolve with null', async () => {
 			const fileTypeClient = client.fileTypeClient()
@@ -168,17 +153,12 @@ describe('OzoneClient', () => {
 	describe('getFileTypeCache', () => {
 		const fields: FileType[] = [
 			{ identifier: 'aFiled', id: 'aaa-bbb' },
-			{ identifier: 'bFiled', id: 'ccc-ddd' }
+			{ identifier: 'bFiled', id: 'ccc-ddd' },
 		]
 
 		describe('cache management', () => {
 			let serverResponseCount: number
 			beforeAll(() => {
-				const fields: FileType[] = [
-					{ identifier: 'aFiled', id: 'aaa-bbb' },
-					{ identifier: 'bFiled', id: 'ccc-ddd' }
-				]
-
 				serverResponseCount = 0
 				// for test, its not mandatory to start the client
 				// return client.start()
@@ -189,53 +169,56 @@ describe('OzoneClient', () => {
 					(xhr: FakeXMLHttpRequest) => {
 						serverResponseCount++
 						xhr.respond(200, responseHeaders.json, JSON.stringify(fields))
-					}
+					},
 				)
 			})
 			it('should request server information only once', async () => {
 				const fileTypeClient = client.fileTypeClient()
-				const typeCachePromise = fileTypeClient.getFileTypeCache()
-				const typeCachePromise2 = fileTypeClient.getFileTypeCache()
+				const first = fileTypeClient.getFileTypeCache()
+				const second = fileTypeClient.getFileTypeCache()
 				await wait(0)
 				server.respond()
-				expect(serverResponseCount).to.be.equal(1, 'server call mo,ne than once)')
+				expect(await first).to.equal(await second, 'both calls should share one cache')
+				expect(serverResponseCount).to.be.equal(1, 'the server should be asked only once')
 			})
 		})
 
 		describe('fileTypes', () => {
-			it('should contains all fileTypes', async () => {
+			it('should contains all fileTypes', () => {
 				const typeCache = new FiletypeCacheImpl(client.fileTypeClient(), fields)
 				expect(typeCache.fileTypes).to.deep.equal([...fields])
 			})
 		})
 
 		describe('findByIdentifier', () => {
-			it('should find fileType with identifier', async () => {
+			it('should find fileType with identifier', () => {
 				const typeCache = new FiletypeCacheImpl(client.fileTypeClient(), fields)
-				expect(typeCache.findByIdentifier('aFiled')).to.deep.equal({ identifier: 'aFiled', id: 'aaa-bbb' })
+				expect(typeCache.findByIdentifier('aFiled')).to.deep.equal({
+					identifier: 'aFiled',
+					id: 'aaa-bbb',
+				})
 			})
-			it('should return undefined when not identifier', async () => {
+			it('should return undefined when not identifier', () => {
 				const typeCache = new FiletypeCacheImpl(client.fileTypeClient(), fields)
 				assert.isUndefined(typeCache.findByIdentifier('foo'))
 			})
 		})
 		describe('findById', () => {
-			it('should find fileType with id', async () => {
+			it('should find fileType with id', () => {
 				const typeCache = new FiletypeCacheImpl(client.fileTypeClient(), fields)
 				expect(typeCache.findById('aaa-bbb')).to.deep.equal({ identifier: 'aFiled', id: 'aaa-bbb' })
 			})
-			it('should return undefined when not identifier', async () => {
+			it('should return undefined when not identifier', () => {
 				const typeCache = new FiletypeCacheImpl(client.fileTypeClient(), fields)
 				assert.isUndefined(typeCache.findById('foo'))
 			})
 		})
 
 		describe('refreshCache', () => {
-
 			it('should update fileTypes', async () => {
 				const fields2: FileType[] = [
 					{ identifier: 'cFiled', id: 'ccc-eee' },
-					{ identifier: 'dFiled', id: 'ddd-fff' }
+					{ identifier: 'dFiled', id: 'ddd-fff' },
 				]
 				const fileTypeClient = client.fileTypeClient()
 				const fileTypeClientMock = sinon.mock(fileTypeClient)

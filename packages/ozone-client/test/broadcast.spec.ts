@@ -1,6 +1,5 @@
 import { assert } from 'chai'
-import sinon from 'sinon'
-import { fakeServer, FakeServer, FakeXMLHttpRequest } from 'nise'
+import { fakeServer, FakeServer } from 'nise'
 
 import { OzoneClient } from '../src/index'
 
@@ -13,7 +12,7 @@ describe('OzoneClient', () => {
 		const credentials = new OzoneClient.UserCredentials('ozoneUser', 'ozonePassword')
 		const config: OzoneClient.ClientConfiguration = {
 			ozoneURL: `http://my.ozone.domain/ozone`,
-			ozoneCredentials: credentials
+			ozoneCredentials: credentials,
 		}
 		client = OzoneClient.newOzoneClient(config)
 		// for test, its not mandatory to start the client
@@ -28,14 +27,14 @@ describe('OzoneClient', () => {
 					[
 						200,
 						{ 'Content-Type': 'application/json' },
-						'{ "id": "uuid", "data": "some", "_meta": {"state": "OK"} }'
-					]
+						'{ "id": "uuid", "data": "some", "_meta": {"state": "OK"} }',
+					],
 				)
 				const api = client.itemClient<any>('an.ozone.type')
-				const resp = api.broadcast({ 'id': 'uuid', 'data': 'some' })
+				const resp = api.broadcast({ id: 'uuid', data: 'some' })
 				server.respond()
 				const data = await resp
-				assert.deepEqual(data, { 'id': 'uuid', 'data': 'some', '_meta': { 'state': 'OK' } })
+				assert.deepEqual(data, { id: 'uuid', data: 'some', _meta: { state: 'OK' } })
 			})
 			it('shoud throw an error if meta state error', async () => {
 				server.respondWith(
@@ -44,20 +43,19 @@ describe('OzoneClient', () => {
 					[
 						200,
 						{ 'Content-Type': 'application/json' },
-						'{ "id": "uuid", "data": "some", "_meta": {"state": "ERROR"} }'
-					]
+						'{ "id": "uuid", "data": "some", "_meta": {"state": "ERROR"} }',
+					],
 				)
 				const api = client.itemClient<any>('an.ozone.type')
-				const resp = api.broadcast({ 'id': 'uuid', 'data': 'some' })
+				const resp = api.broadcast({ id: 'uuid', data: 'some' })
 				server.respond()
 				try {
-					const data = await resp
+					const _data = await resp
 					assert.isTrue(false, 'previous line should throw an error')
 				} catch (err) {
-					assert.deepEqual(err, { 'id': 'uuid', 'data': 'some', '_meta': { 'state': 'ERROR' } })
+					assert.deepEqual(err, { id: 'uuid', data: 'some', _meta: { state: 'ERROR' } })
 				}
 			})
-
 		})
 
 		describe('bulkBroadcast', () => {
@@ -68,14 +66,14 @@ describe('OzoneClient', () => {
 					[
 						200,
 						{ 'Content-Type': 'application/json' },
-						'[{ "id": "uuid", "data": "some", "_meta": {"state": "OK"} }]'
-					]
+						'[{ "id": "uuid", "data": "some", "_meta": {"state": "OK"} }]',
+					],
 				)
 				const api = client.itemClient<any>('an.ozone.type')
-				const resp = api.bulkBroadcast([{ 'id': 'uuid', 'data': 'some' }])
+				const resp = api.bulkBroadcast([{ id: 'uuid', data: 'some' }])
 				server.respond()
 				const data = await resp
-				assert.deepEqual(data, [{ 'id': 'uuid', 'data': 'some', '_meta': { 'state': 'OK' } }])
+				assert.deepEqual(data, [{ id: 'uuid', data: 'some', _meta: { state: 'OK' } }])
 			})
 			it('shoud throw an error if meta state error', async () => {
 				server.respondWith(
@@ -84,20 +82,19 @@ describe('OzoneClient', () => {
 					[
 						200,
 						{ 'Content-Type': 'application/json' },
-						'[{ "id": "uuid", "data": "some", "_meta": {"state": "ERROR"} }]'
-					]
+						'[{ "id": "uuid", "data": "some", "_meta": {"state": "ERROR"} }]',
+					],
 				)
 				const api = client.itemClient<any>('an.ozone.type')
-				const resp = api.bulkBroadcast([{ 'id': 'uuid', 'data': 'some' }])
+				const resp = api.bulkBroadcast([{ id: 'uuid', data: 'some' }])
 				server.respond()
 				try {
-					const data = await resp
+					const _data = await resp
 					assert.isTrue(false, 'previous line should throw an error')
 				} catch (err) {
-					assert.deepEqual(err, [{ 'id': 'uuid', 'data': 'some', '_meta': { 'state': 'ERROR' } }])
+					assert.deepEqual(err, [{ id: 'uuid', data: 'some', _meta: { state: 'ERROR' } }])
 				}
 			})
 		})
 	})
-
 })

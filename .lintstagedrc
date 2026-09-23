@@ -1,0 +1,6 @@
+{
+	"packages/*/test/**/*.ts": ["eslint --max-warnings 0"],
+	"packages/*/src/**/*.ts": ["eslint"],
+	"packages/*/ozone/utility/*.ts": ["eslint"],
+	"*.{ts,mts,mjs,json,md}": ["prettier --write"]
+}

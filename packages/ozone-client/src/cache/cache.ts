@@ -2,20 +2,20 @@ export type CacheOptions = {
 	/**
 	 * max number of element store in cache
 	 */
-	max?: number,
+	max?: number
 
 	/**
 	 * data validity expiration date
 	 */
-	maxAge?: number,
+	maxAge?: number
 
 	/**
 	 * get function will return the outdated value before delete it
 	 */
-	stale?: Boolean
+	stale?: boolean
 }
 
-type MapDataType<V> = {expires: number | false, content: V}
+type MapDataType<V> = { expires: number | false; content: V }
 
 /**
  * TypeScript implementation of https://github.com/lukeed/tmp-cache
@@ -32,13 +32,13 @@ type MapDataType<V> = {expires: number | false, content: V}
  *
  */
 export class Cache<K, V> {
-	private readonly store: Map<K,MapDataType<V>>
+	private readonly store: Map<K, MapDataType<V>>
 
 	private readonly max: number
 
 	private readonly maxAge: number
 
-	private readonly stale: Boolean
+	private readonly stale: boolean
 
 	constructor(opts: CacheOptions | number = {}) {
 		this.store = new Map<K, MapDataType<V>>()
@@ -50,8 +50,8 @@ export class Cache<K, V> {
 			options = opts
 		}
 
-		let max = options.max || 0
-		this.max = max > 0 && max || Infinity
+		const max = options.max || 0
+		this.max = (max > 0 && max) || Infinity
 		this.maxAge = options.maxAge !== undefined ? options.maxAge : -1
 		this.stale = !!options.stale
 	}
@@ -61,19 +61,19 @@ export class Cache<K, V> {
 	}
 
 	get size(): number {
-	  return this.store.size
+		return this.store.size
 	}
 
 	clear(): void {
-	  this.store.clear()
+		this.store.clear()
 	}
 
 	delete(key: K): boolean {
-	  return this.store.delete(key)
+		return this.store.delete(key)
 	}
 
 	forEach(callBack: (value: V, key: K) => void): void {
-	  this.store.forEach((value, key) => callBack(value.content, key))
+		this.store.forEach((value, key) => callBack(value.content, key))
 	}
 
 	has(key: K): boolean {
@@ -81,9 +81,9 @@ export class Cache<K, V> {
 	}
 
 	set(key: K, content: V, maxAge: number = this.maxAge) {
-		this.has(key) && this.delete(key);
-		(this.size + 1 > this.max) && this.delete(this.keys().next().value)
-		const expires = maxAge > -1 && (maxAge + Date.now())
+		if (this.has(key)) this.delete(key)
+		if (this.size + 1 > this.max) this.delete(this.keys().next().value)
+		const expires = maxAge > -1 && maxAge + Date.now()
 		return this.store.set(key, { expires, content })
 	}
 
@@ -101,7 +101,7 @@ export class Cache<K, V> {
 		return content
 	}
 
-	keys (): IterableIterator<K> {
+	keys(): IterableIterator<K> {
 		return this.store.keys()
 	}
 }

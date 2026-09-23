@@ -5,21 +5,12 @@
 		"moduleResolution": "node",
 		"experimentalDecorators": true,
 		"strict": true,
+		"noEmit": true,
+		"skipLibCheck": true,
 		"strictNullChecks": true,
 		"noImplicitThis": true,
 		"noImplicitAny": true,
-		"lib": [
-			"es2017",
-			"es6",
-			"es5",
-			"dom"
-		],
-		"declaration": true,
-		"sourceMap": true,
-		"rootDir": "./ozone",
-		"outDir": "./dist"
+		"lib": ["es2017", "es6", "es5", "dom"]
 	},
-	"include": [
-		"ozone"
-	]
+	"include": ["ozone", "tsup.config.ts"]
 }

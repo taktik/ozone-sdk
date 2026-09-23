@@ -1,65 +1,64 @@
 import { expect } from 'chai'
-import { TermsAggregation, SearchRequest } from '@taktik/ozone-type'
 import { SearchQuery } from '../../src/search/searchQuery'
 
-describe('ozone-search-helper', function() {
-
-	it('SearchQuery is exposed as a global class', function() {
+describe('ozone-search-helper', function () {
+	it('SearchQuery is exposed as a global class', function () {
 		const mySearchQuery = new SearchQuery()
 		expect(mySearchQuery).to.be.an.instanceof(SearchQuery)
 	})
 
-	it('SearchGenerator quicksearch', function() {
+	it('SearchGenerator quicksearch', function () {
 		const searchQuery = new SearchQuery()
 		searchQuery.quicksearch('search value')
 		expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({
 			size: 10,
 			query: {
-				'$type': 'QueryStringQuery',
-				'field': '_quicksearch',
-				'queryString': 'search value*'
-			}
+				$type: 'QueryStringQuery',
+				field: '_quicksearch',
+				queryString: 'search value*',
+			},
 		})
 	})
 
-	it('SearchGenerator suggestion', function() {
+	it('SearchGenerator suggestion', function () {
 		const searchQuery = new SearchQuery()
 		searchQuery.suggestion('search value', 'new')
 		expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({
 			size: 10,
 			query: {
-				'$type': 'QueryStringQuery',
-				'field': '_quicksearch',
-				'queryString': 'search value*'
-			},
-			aggregations: [{
-				'$type': 'TermsAggregation',
-				name: 'suggest',
+				$type: 'QueryStringQuery',
 				field: '_quicksearch',
-				order: 'COUNT_DESC',
-				size: 10,
-				includePattern: 'new.*'
-			}]
+				queryString: 'search value*',
+			},
+			aggregations: [
+				{
+					$type: 'TermsAggregation',
+					name: 'suggest',
+					field: '_quicksearch',
+					order: 'COUNT_DESC',
+					size: 10,
+					includePattern: 'new.*',
+				},
+			],
 		})
 	})
 
-	it('SearchGenerator tenant', function() {
+	it('SearchGenerator tenant', function () {
 		const searchQuery = new SearchQuery()
 		searchQuery.tenantQuery('OWN_AND_PARENTS', 'my_tenantId')
-		console.log(searchQuery.searchQuery)
 		expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({
 			size: 10,
 			query: {
 				$type: 'TenantQuery',
 				mode: 'OWN_AND_PARENTS',
-				tenantId: 'my_tenantId'
-			}
+				tenantId: 'my_tenantId',
+			},
 		})
 	})
 
 	it('SearchGenerator custom', () => {
 		const searchQuery = new SearchQuery()
-		searchQuery.custom({ size : 8 } as SearchRequest)
+		searchQuery.custom({ size: 8 })
 		expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({ size: 8 })
 	})
 
@@ -72,8 +71,8 @@ describe('ozone-search-helper', function() {
 				$type: 'TermQuery',
 				field: 'myField',
 				value: 'aText',
-				ignoreCase: false
-			}
+				ignoreCase: false,
+			},
 		})
 	})
 	it('SearchGenerator typeQuery', () => {
@@ -84,8 +83,8 @@ describe('ozone-search-helper', function() {
 			query: {
 				$type: 'TypeQuery',
 				typeIdentifiers: ['type1', 'type2'],
-				includeSubTypes: false
-			}
+				includeSubTypes: false,
+			},
 		})
 	})
 	it('SearchGenerator typeQueryWithSubType', () => {
@@ -96,8 +95,8 @@ describe('ozone-search-helper', function() {
 			query: {
 				$type: 'TypeQuery',
 				typeIdentifiers: ['type1', 'type2'],
-				includeSubTypes: true
-			}
+				includeSubTypes: true,
+			},
 		})
 	})
 
@@ -109,22 +108,21 @@ describe('ozone-search-helper', function() {
 			expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({
 				size: 10,
 				query: {
-					'$type': 'BoolQuery',
+					$type: 'BoolQuery',
 					mustClauses: [
 						{
-							'$type': 'TypeQuery',
+							$type: 'TypeQuery',
 							typeIdentifiers: ['aType'],
-							includeSubTypes: false
+							includeSubTypes: false,
 						},
 						{
-							'$type': 'QueryStringQuery',
-							'field': '_quicksearch',
-							'queryString': 'hello*'
-						}
-					]
-				}
+							$type: 'QueryStringQuery',
+							field: '_quicksearch',
+							queryString: 'hello*',
+						},
+					],
+				},
 			})
-
 		})
 
 		it('TypeQuery or quicksearch', () => {
@@ -134,111 +132,106 @@ describe('ozone-search-helper', function() {
 			expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({
 				size: 10,
 				query: {
-					'$type': 'BoolQuery',
+					$type: 'BoolQuery',
 					shouldClauses: [
 						{
-							'$type': 'TypeQuery',
+							$type: 'TypeQuery',
 							typeIdentifiers: ['aType'],
-							includeSubTypes: false
+							includeSubTypes: false,
 						},
 						{
-							'$type': 'QueryStringQuery',
-							'field': '_quicksearch',
-							'queryString': 'hello*'
-						}
-					]
-				}
+							$type: 'QueryStringQuery',
+							field: '_quicksearch',
+							queryString: 'hello*',
+						},
+					],
+				},
 			})
-
 		})
 
 		it('(typeQuery or quicksearch) and termQuery', () => {
 			const searchQuery = new SearchQuery()
-			searchQuery.typeQuery('aType')
-				.or.quicksearch('hello')
-				.and.termQuery('myField','aText')
+			searchQuery.typeQuery('aType').or.quicksearch('hello').and.termQuery('myField', 'aText')
 
 			expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({
 				size: 10,
 				query: {
-					'$type': 'BoolQuery',
+					$type: 'BoolQuery',
 					mustClauses: [
 						{
-							'$type': 'BoolQuery',
+							$type: 'BoolQuery',
 							shouldClauses: [
 								{
-									'$type': 'TypeQuery',
+									$type: 'TypeQuery',
 									typeIdentifiers: ['aType'],
-									includeSubTypes: false
+									includeSubTypes: false,
 								},
 								{
-									'$type': 'QueryStringQuery',
-									'field': '_quicksearch',
-									'queryString': 'hello*'
-								}
-							]
+									$type: 'QueryStringQuery',
+									field: '_quicksearch',
+									queryString: 'hello*',
+								},
+							],
 						},
 						{
 							$type: 'TermQuery',
 							field: 'myField',
 							value: 'aText',
-							ignoreCase: false
-						}
-					]
-				}
+							ignoreCase: false,
+						},
+					],
+				},
 			})
 		})
 
 		it('(typeQuery or quicksearch or termQuery)', () => {
 			const searchQuery = new SearchQuery()
-			searchQuery.typeQuery('aType')
-				.or.quicksearch('hello')
-				.termQuery('myField','aText')
+			searchQuery.typeQuery('aType').or.quicksearch('hello').termQuery('myField', 'aText')
 
 			expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({
 				size: 10,
 				query: {
-					'$type': 'BoolQuery',
+					$type: 'BoolQuery',
 					shouldClauses: [
 						{
-							'$type': 'TypeQuery',
+							$type: 'TypeQuery',
 							typeIdentifiers: ['aType'],
-							includeSubTypes: false
+							includeSubTypes: false,
 						},
 						{
-							'$type': 'QueryStringQuery',
-							'field': '_quicksearch',
-							'queryString': 'hello*'
+							$type: 'QueryStringQuery',
+							field: '_quicksearch',
+							queryString: 'hello*',
 						},
 						{
 							$type: 'TermQuery',
 							field: 'myField',
 							value: 'aText',
-							ignoreCase: false
-						}
-					]
-				}
+							ignoreCase: false,
+						},
+					],
+				},
 			})
 		})
 	})
 	describe('should order', () => {
 		it('search and order ascending', () => {
 			const searchQuery = new SearchQuery()
-			const a = searchQuery.termQuery('myField', 'aText').order('aField').ASC
+			searchQuery.termQuery('myField', 'aText').order('aField').ASC
 			expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({
 				size: 10,
 				query: {
 					$type: 'TermQuery',
 					field: 'myField',
 					value: 'aText',
-					ignoreCase: false
+					ignoreCase: false,
 				},
 				sorts: [
 					{
 						field: 'aField',
-						order: 'ASC'
-					}
-				]
+						order: 'ASC',
+					},
+				],
 			})
 		})
 		it('order ascending and search', () => {
@@ -250,14 +243,14 @@ describe('ozone-search-helper', function() {
 					$type: 'TermQuery',
 					field: 'myField',
 					value: 'aText',
-					ignoreCase: true
+					ignoreCase: true,
 				},
 				sorts: [
 					{
 						field: 'aField',
-						order: 'ASC'
-					}
-				]
+						order: 'ASC',
+					},
+				],
 			})
 		})
 		it('order descending', () => {
@@ -269,48 +262,50 @@ describe('ozone-search-helper', function() {
 					$type: 'TermQuery',
 					field: 'myField',
 					value: 'aText',
-					ignoreCase: false
+					ignoreCase: false,
 				},
 				sorts: [
 					{
 						field: 'aField',
-						order: 'DESC'
-					}
-				]
+						order: 'DESC',
+					},
+				],
 			})
 		})
 		it('compose order', () => {
 			const searchQuery = new SearchQuery()
-			const a = searchQuery.order('aField').ASC.termQuery('myField', 'aText')
-				.order('bField').DESC
-				.order('cField').NONE
+			searchQuery
+				.order('aField')
+				.ASC.termQuery('myField', 'aText')
+				.order('bField')
+				.DESC.order('cField').NONE
 			expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({
 				size: 10,
 				query: {
 					$type: 'TermQuery',
 					field: 'myField',
 					value: 'aText',
-					ignoreCase: false
+					ignoreCase: false,
 				},
 				sorts: [
 					{
 						field: 'aField',
-						order: 'ASC'
+						order: 'ASC',
 					},
 					{
 						field: 'bField',
-						order: 'DESC'
+						order: 'DESC',
 					},
 					{
 						field: 'cField',
-						order: 'NONE'
-					}
-				]
+						order: 'NONE',
+					},
+				],
 			})
 		})
 	})
 	describe('combineWith order', () => {
-		it('shoud combine two query',() => {
+		it('shoud combine two query', () => {
 			const searchQuery = new SearchQuery()
 			const searchQueryToCombine = new SearchQuery()
 
@@ -321,33 +316,32 @@ describe('ozone-search-helper', function() {
 			expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({
 				size: 10,
 				query: {
-					'$type': 'BoolQuery',
+					$type: 'BoolQuery',
 					shouldClauses: [
 						{
 							$type: 'TermQuery',
 							field: 'myField',
 							value: 'aText',
-							ignoreCase: false
+							ignoreCase: false,
 						},
 						{
 							$type: 'TermQuery',
 							field: 'otherField',
 							value: 'aValue',
-							ignoreCase: false
-						}
-					]
+							ignoreCase: false,
+						},
+					],
 				},
 				sorts: [
 					{
 						field: 'aField',
-						order: 'ASC'
-					}
-				]
+						order: 'ASC',
+					},
+				],
 			})
-
 		})
 
-		it('shoud combine two BoolQuery query',() => {
+		it('shoud combine two BoolQuery query', () => {
 			const searchQuery = new SearchQuery()
 			const searchQueryToCombine = new SearchQuery()
 			searchQuery.termQuery('myField', 'aText').addOrderOn('aField', 'ASC')
@@ -357,35 +351,34 @@ describe('ozone-search-helper', function() {
 			expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({
 				size: 10,
 				query: {
-					'$type': 'BoolQuery',
+					$type: 'BoolQuery',
 					mustClauses: [
 						{
 							$type: 'TermQuery',
 							field: 'myField',
 							value: 'aText',
-							ignoreCase: false
+							ignoreCase: false,
 						},
 						{
-							'$type': 'BoolQuery',
+							$type: 'BoolQuery',
 							mustNotClauses: [
 								{
 									$type: 'TermQuery',
 									field: 'otherField',
 									value: 'aValue',
-									ignoreCase: false
-								}
-							]
-						}
-					]
+									ignoreCase: false,
+								},
+							],
+						},
+					],
 				},
 				sorts: [
 					{
 						field: 'aField',
-						order: 'ASC'
-					}
-				]
+						order: 'ASC',
+					},
+				],
 			})
-
 		})
 	})
 	describe('rangeQuery', () => {
@@ -395,44 +388,43 @@ describe('ozone-search-helper', function() {
 			expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({
 				size: 10,
 				query: {
-					'$type': 'RangeQuery',
+					$type: 'RangeQuery',
 					field: 'aField',
 					from: 1,
-					to: 2
-				}
+					to: 2,
+				},
 			})
 		})
 	})
 	describe('regexpQuery', () => {
 		it('should create a RegexpQuery', () => {
 			const searchQuery = new SearchQuery()
-			searchQuery.regexpQuery('aField','match.*', true)
+			searchQuery.regexpQuery('aField', 'match.*', true)
 
 			expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({
 				size: 10,
 				query: {
-					'$type': 'RegexpQuery',
+					$type: 'RegexpQuery',
 					field: 'aField',
 					ignoreCase: true,
-					regexp: 'match.*'
-				}
+					regexp: 'match.*',
+				},
 			})
 		})
 	})
 	describe('wildcardQuery', () => {
 		it('should create a WildcardQuery', () => {
 			const searchQuery = new SearchQuery()
-			searchQuery.wildcardQuery('aField','match')
+			searchQuery.wildcardQuery('aField', 'match')
 
 			expect(JSON.parse(searchQuery.searchQuery)).to.be.deep.equal({
 				size: 10,
 				query: {
-					'$type': 'WildcardQuery',
+					$type: 'WildcardQuery',
 					field: 'aField',
-					wildcard: 'match'
-				}
+					wildcard: 'match',
+				},
 			})
 		})
 	})
-
 })

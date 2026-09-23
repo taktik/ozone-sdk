@@ -1,5 +1,12 @@
 import type { Logger } from 'generic-logger-typings'
-import { AssumeStateIsNot, AssumeStateIs,AssumeStateIsNotIn, AssumeStateIsIn, StateMachineImpl, ListenerRegistration } from 'typescript-state-machine'
+import {
+	AssumeStateIsNot,
+	AssumeStateIs,
+	AssumeStateIsNotIn,
+	AssumeStateIsIn,
+	StateMachineImpl,
+	ListenerRegistration,
+} from 'typescript-state-machine'
 import {
 	Response as HttpClientResponse,
 	Request,
@@ -9,7 +16,7 @@ import {
 	FilterCollection,
 	Filter,
 	FilterChain,
-	setLogger
+	setLogger,
 } from 'typescript-http-client'
 import SockJS from 'sockjs-client'
 import { DeviceMessage, Item, UUID } from '@taktik/ozone-type'
@@ -31,7 +38,7 @@ import {
 	AuthInfo,
 	ClientConfiguration,
 	AuthenticatedPrincipal,
-	DEFAULT_FILTERS
+	DEFAULT_FILTERS,
 } from './ozoneClient'
 import { TaskClient } from '../taskClient/taskClient'
 import { TaskClientImpl } from '../taskClient/taskClientImpl'
@@ -72,7 +79,7 @@ class Listener {
 class MessageListener extends Listener {
 	constructor(
 		readonly callBack: (message: DeviceMessage) => void,
-		readonly messageType?: string
+		readonly messageType?: string,
 	) {
 		super()
 	}
@@ -136,15 +143,23 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 	}
 
 	get isAuthenticated(): boolean {
-		return this.inOneOfStates([states.WS_CONNECTED, states.WS_CONNECTING, states.WS_CONNECTION_ERROR, states.AUTHENTICATED])
+		return this.inOneOfStates([
+			states.WS_CONNECTED,
+			states.WS_CONNECTING,
+			states.WS_CONNECTION_ERROR,
+			states.AUTHENTICATED,
+		])
 	}
 
 	get isConnected(): boolean {
 		return this.inState(states.WS_CONNECTED)
 	}
 
-	onMessage<M extends DeviceMessage>(messageType: string, callBack: (message: M) => void): ListenerRegistration {
-		return this.addMessageListener(message => callBack(message as M), messageType)
+	onMessage<M extends DeviceMessage>(
+		messageType: string,
+		callBack: (message: M) => void,
+	): ListenerRegistration {
+		return this.addMessageListener((message) => callBack(message as M), messageType)
 	}
 
 	onAnyMessage(callBack: (message: any) => void): ListenerRegistration {
@@ -160,7 +175,11 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 		this.checkInState(states.STOPPED, 'Client already started')
 		this.setState(states.STARTED)
 		if (this.config.ozoneCredentials) {
-			await this.waitUntilEnteredOneOf([states.AUTHENTICATION_ERROR, states.AUTHENTICATED, states.NETWORK_OR_SERVER_ERROR])
+			await this.waitUntilEnteredOneOf([
+				states.AUTHENTICATION_ERROR,
+				states.AUTHENTICATED,
+				states.NETWORK_OR_SERVER_ERROR,
+			])
 		}
 	}
 
@@ -193,11 +212,11 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 	private buildWebSocketUrl(): string {
 		const params: { [key: string]: string | undefined } = {
 			ozoneSessionId: this.authInfo!.sessionId,
-			...this._config.webSocketsParams
+			...this._config.webSocketsParams,
 		}
 		const query = Object.keys(params)
-			.filter(key => !!params[key])
-			.map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key]!)}`)
+			.filter((key) => !!params[key])
+			.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key]!)}`)
 			.join('&')
 		const base = this._config.webSocketsURL!
 		return `${base}${base.indexOf('?') === -1 ? '?' : '&'}${query}`
@@ -216,11 +235,12 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 		if (!this.isAuthenticated) {
 			throw Error('Cannot retrieve principal: client is not authenticated.')
 		}
-		const request = new Request(`${this.config.ozoneURL}/rest/v3/authentication/current/principal`)
-			.set({
-				method: 'GET',
-				withCredentials: true
-			})
+		const request = new Request(
+			`${this.config.ozoneURL}/rest/v3/authentication/current/principal`,
+		).set({
+			method: 'GET',
+			withCredentials: true,
+		})
 		return this.call(request)
 	}
 
@@ -239,7 +259,7 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 
 	private onWsMessage(message: MessageEvent) {
 		if (message.data === 'ping') {
-			this._ws && this._ws.send('pong')
+			this._ws?.send('pong')
 		} else if (message.data === 'pong') {
 			this.handlePong()
 		} else {
@@ -260,7 +280,7 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 			if (postingId) {
 				shouldProcess = !this.acknowledgedCache.has(postingId)
 				this.acknowledgedCache.set(postingId, true, ttl)
-				this._ws && this._ws.send(JSON.stringify({ '$type': 'Ack', postingId }))
+				this._ws?.send(JSON.stringify({ $type: 'Ack', postingId }))
 			}
 		} catch (err) {
 			this.log?.warn(err, 'error in WS message acknowledge')
@@ -321,12 +341,11 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 		this.destroyWs()
 		try {
 			const httpClient = newHttpClient()
-			const request = new Request(`${this.config.ozoneURL}/rest/v3/authentication/logout`)
-				.set({
-					method: 'GET',
-					withCredentials: true
-				})
-			await (httpClient.call<void>(request))
+			const request = new Request(`${this.config.ozoneURL}/rest/v3/authentication/logout`).set({
+				method: 'GET',
+				withCredentials: true,
+			})
+			await httpClient.call<void>(request)
 			this._authInfo = undefined
 			this.setState(states.STOPPED)
 		} catch (e) {
@@ -354,13 +373,13 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 
 	private destroyWs() {
 		if (this._ws) {
-			let socket = this._ws
+			const socket = this._ws
 			this._ws = undefined
 			try {
 				if (socket.readyState === socket.CONNECTING || socket.readyState === socket.OPEN) {
 					socket.close(4000)
 				}
-			} catch (e) {
+			} catch {
 				// TODO AB DO something with e ?
 			}
 		}
@@ -376,9 +395,9 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 			/* FIXME AB Something is wrong here. The promise resolve or reject method should always be called but it is not the case */
 			const ws = new SockJS(this.buildWebSocketUrl())
 			this._ws = ws
-			ws.onerror = ev => {
+			ws.onerror = (ev) => {
 				if (this._ws === ws) {
-					let mustReject = this._state === states.WS_CONNECTING
+					const mustReject = this._state === states.WS_CONNECTING
 					try {
 						if (this.state !== states.WS_CONNECTION_ERROR) {
 							// Destroy the WS
@@ -392,9 +411,9 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 					}
 				}
 			}
-			ws.onclose = ev => {
+			ws.onclose = (ev) => {
 				if (this._ws === ws) {
-					let mustReject = this._state === states.WS_CONNECTING
+					const mustReject = this._state === states.WS_CONNECTING
 					try {
 						if (this.state !== states.WS_CONNECTION_ERROR) {
 							// Destroy the WS
@@ -462,7 +481,7 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 		return {
 			cancel(): void {
 				messageListener.active = false
-			}
+			},
 		}
 	}
 
@@ -487,16 +506,19 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 	private createAutoReAuthTimer() {
 		const retryInterval = this.nextReAuthRetryInterval()
 		this._lastReAuthDelay = retryInterval
-		this._reAuthTimeout = window.setTimeout(() =>
-			(async () => {
-				try {
-					if (this.canGoToState(states.AUTHENTICATING)) {
-						this.setState(states.AUTHENTICATING)
+		this._reAuthTimeout = window.setTimeout(
+			() =>
+				(async () => {
+					try {
+						if (this.canGoToState(states.AUTHENTICATING)) {
+							this.setState(states.AUTHENTICATING)
+						}
+					} catch (e) {
+						this.log?.info('login failed : ' + e)
 					}
-				} catch (e) {
-					this.log?.info('login failed : ' + e)
-				}
-			})(), withRetryJitter(retryInterval))
+				})(),
+			withRetryJitter(retryInterval),
+		)
 	}
 
 	@AssumeStateIsNotIn([states.NETWORK_OR_SERVER_ERROR, states.AUTHENTICATION_ERROR])
@@ -541,7 +563,7 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 		}
 		// We have at least sent one ping and no pong received for more than 30s since last ping
 		// --> Problem. We close the socket and trigger onClose()
-		if (this._lastSentPing !== 0 && (this._lastSentPing - this._lastReceivedPong) > 20000) {
+		if (this._lastSentPing !== 0 && this._lastSentPing - this._lastReceivedPong > 20000) {
 			if (this._ws.readyState === this._ws.CONNECTING || this._ws.readyState === this._ws.OPEN) {
 				this.log?.warn('Ping timeout, closing connection')
 				OzoneClientImpl.terminateWSConnectionForcefully(this._ws)
@@ -588,11 +610,15 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 	private createAutoReconnectWSTimer() {
 		const retryInterval = this.nextWSRetryInterval()
 		this._lastWSRetryDelay = retryInterval
-		this._wsReconnectTimeout = window.setTimeout(() => (async () => {
-			if (this.canGoToState(states.WS_CONNECTING)) {
-				this.setState(states.WS_CONNECTING)
-			}
-		})(), withRetryJitter(retryInterval))
+		this._wsReconnectTimeout = window.setTimeout(
+			() =>
+				(async () => {
+					if (this.canGoToState(states.WS_CONNECTING)) {
+						this.setState(states.WS_CONNECTING)
+					}
+				})(),
+			withRetryJitter(retryInterval),
+		)
 	}
 
 	@AssumeStateIsNot(states.WS_CONNECTION_ERROR)
@@ -619,7 +645,7 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 	private static invokeMessageListeners(message: DeviceMessage, listeners?: MessageListener[]) {
 		if (listeners) {
 			for (let index = 0; index < listeners.length; index++) {
-				let listener = listeners[index]
+				const listener = listeners[index]
 				if (listener.active) {
 					try {
 						listener.callBack(message)
@@ -675,21 +701,32 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 		}
 		if (defaultFilters.includes(DEFAULT_FILTERS.SESSION_REFRESH)) {
 			// Try to auto-refresh the session if expired
-			this._httpClient.addFilter(new SessionRefreshFilter(this, lastCheck => this._lastSessionCheck = lastCheck), DEFAULT_FILTERS.SESSION_REFRESH)
+			this._httpClient.addFilter(
+				new SessionRefreshFilter(this, (lastCheck) => (this._lastSessionCheck = lastCheck)),
+				DEFAULT_FILTERS.SESSION_REFRESH,
+			)
 		}
 		if (defaultFilters.includes(DEFAULT_FILTERS.SESSION_FILTER)) {
 			// Add Ozone session header to all requests
-			this._httpClient.addFilter(new SessionFilter(() => this._authInfo), DEFAULT_FILTERS.SESSION_FILTER)
+			this._httpClient.addFilter(
+				new SessionFilter(() => this._authInfo),
+				DEFAULT_FILTERS.SESSION_FILTER,
+			)
 		}
 		if (defaultFilters.includes(DEFAULT_FILTERS.DEFAULT_OPTIONS)) {
 			// Set some sensible default to all requests
-			this._httpClient.addFilter(new DefaultsOptions(this._config.defaultTimeout || DEFAULT_TIMEOUT), DEFAULT_FILTERS.DEFAULT_OPTIONS)
+			this._httpClient.addFilter(
+				new DefaultsOptions(this._config.defaultTimeout || DEFAULT_TIMEOUT),
+				DEFAULT_FILTERS.DEFAULT_OPTIONS,
+			)
 		}
 		if (defaultFilters.includes(DEFAULT_FILTERS.POST_FILTERS)) {
 			// Add post-filters
-			this._httpClient.addFilter(new FilterCollection(this.postFilters), DEFAULT_FILTERS.POST_FILTERS)
+			this._httpClient.addFilter(
+				new FilterCollection(this.postFilters),
+				DEFAULT_FILTERS.POST_FILTERS,
+			)
 		}
-
 	}
 
 	itemClient<T extends Item>(typeIdentifier: string): ItemClient<T> {
@@ -740,7 +777,9 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 
 	insertSessionIdInURL(url: string): string {
 		if (!url.startsWith(this.config.ozoneURL)) {
-			throw new Error(`insertSessionIdInURL : Given url should start with base url ${this.config.ozoneURL}`)
+			throw new Error(
+				`insertSessionIdInURL : Given url should start with base url ${this.config.ozoneURL}`,
+			)
 		}
 		if (!this.authInfo) {
 			throw new Error(`insertSessionIdInURL : There is no valid session`)
@@ -763,7 +802,10 @@ class DefaultsOptions implements Filter<any, any> {
 		this.defaultTimeout = defaultTimeout
 	}
 
-	async doFilter(request: Request, filterChain: FilterChain<any>): Promise<HttpClientResponse<any>> {
+	async doFilter(
+		request: Request,
+		filterChain: FilterChain<any>,
+	): Promise<HttpClientResponse<any>> {
 		if (!request.timeout) {
 			request.timeout = this.defaultTimeout
 		}
@@ -776,7 +818,10 @@ class DefaultsOptions implements Filter<any, any> {
 		Also, update the last session check
 	*/
 class SessionRefreshFilter implements Filter<any, any> {
-	constructor(readonly client: OzoneClientInternals, readonly sessionCheckCallBack: (lastCheck: number) => void) {}
+	constructor(
+		readonly client: OzoneClientInternals,
+		readonly sessionCheckCallBack: (lastCheck: number) => void,
+	) {}
 
 	async doFilter(call: Request, filterChain: FilterChain<any>): Promise<HttpClientResponse<any>> {
 		try {
@@ -791,12 +836,13 @@ class SessionRefreshFilter implements Filter<any, any> {
 			// Try to detect if the session needs to be refreshed
 			if (
 				// Only try to re-authenticate if we receive a 401 or 403 status code
-				(response.status === 403 || response.status === 401)
+				(response.status === 403 || response.status === 401) &&
 				// If we receive a principal id, it means we are still authenticated with a valid session, so there is no need
 				// to try to re-authenticate
-				&& !response.headers['ozone-principal-id']
+				!response.headers['ozone-principal-id'] &&
 				// Only try to re-authenticate if we are already authenticated
-				&& this.client.isAuthenticated) {
+				this.client.isAuthenticated
+			) {
 				try {
 					// TODO AB Protect this call to avoid multiple login in //
 					// TODO AB Destroy WebSocket ( don't wait connecting state)
