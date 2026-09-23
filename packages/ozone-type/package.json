@@ -1,0 +1,24 @@
+{
+	"name": "@taktik/ozone-type",
+	"version": "1.0.0",
+	"description": "Ozone API types, generated from the server swagger",
+	"license": "ISC",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"sideEffects": false,
+	"files": [
+		"dist"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/taktik/ozone-sdk.git",
+		"directory": "packages/ozone-type"
+	},
+	"scripts": {
+		"build": "tsc",
+		"typecheck": "tsc --noEmit"
+	},
+	"publishConfig": {
+		"registry": "https://npm.taktik.be/repository/npm/"
+	}
+}

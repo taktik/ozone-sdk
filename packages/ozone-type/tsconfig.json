@@ -1,0 +1,26 @@
+{
+	"compilerOptions": {
+		"target": "es6",
+		"module": "esnext",
+		"moduleResolution": "node",
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"strict": true,
+		"strictNullChecks": true,
+		"noImplicitThis": true,
+		"noImplicitAny": true,
+		"lib": [
+			"es2017",
+			"es6",
+			"es5",
+			"dom"
+		],
+		"declaration": true,
+		"sourceMap": true,
+		"rootDir": "./ozone",
+		"outDir": "./dist"
+	},
+	"include": [
+		"ozone"
+	]
+}
