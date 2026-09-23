@@ -62,5 +62,7 @@ never gets its `type`.
 
 ---
 
-Most of this package is generated from a running Ozone server — see the
-[repository README](../../README.md) if you need to regenerate it.
+Most of `ozone/model` is generated: ~480 files by swagger-codegen from
+[`swagger.json`](./swagger.json), ~155 by the `oz` CLI reading the item types of a running Ozone
+server. The rest, `Item.ts` first of all, is written by hand. Regenerating is not automated in this
+repo yet, and both generators write into that one directory — so whatever you run, read the diff.

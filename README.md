@@ -53,9 +53,6 @@ republished.
 
 ## Regenerating the types
 
-`@taktik/ozone-type` is generated from the swagger of an Ozone server. The `swagger.json` is
-versioned so that regeneration is reproducible and its diff is readable.
-
-```bash
-OZONE_PASSWORD=... ./scripts/generate-types.sh https://test.flowr.cloud/ozone
-```
+`@taktik/ozone-type` is generated from a running Ozone server, not written by hand — see its own
+[README](packages/ozone-type/README.md). That generation is not wired into this repo yet; the types
+were imported at the last released state of `ozone-components` and are edited by hand until it is.
