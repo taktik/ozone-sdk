@@ -35,6 +35,22 @@
 			"require": "./dist/upload.js"
 		}
 	},
+	"typesVersions": {
+		"*": {
+			"search": [
+				"dist/search.d.ts"
+			],
+			"urls": [
+				"dist/urls.d.ts"
+			],
+			"default": [
+				"dist/default.d.ts"
+			],
+			"upload": [
+				"dist/upload.d.ts"
+			]
+		}
+	},
 	"files": [
 		"dist"
 	],
