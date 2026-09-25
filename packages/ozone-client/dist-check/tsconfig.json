@@ -1,0 +1,23 @@
+/*
+	Deliberately standalone rather than extending ../tsconfig.json: that one maps
+	@taktik/ozone-type to the sibling package's sources, and this check has to
+	resolve both packages through node_modules, from their published entry points.
+
+	`skipLibCheck` stays off. Consumers who set it would not see a broken
+	declaration until they used it; this gate is here to see it first.
+*/
+{
+	"compilerOptions": {
+		"noEmit": true,
+		"strict": true,
+		"skipLibCheck": false,
+		"target": "es2018",
+		"module": "esnext",
+		"moduleResolution": "node",
+		"experimentalDecorators": true,
+		"allowSyntheticDefaultImports": true,
+		"lib": ["es2018", "dom"],
+		"types": []
+	},
+	"include": ["consumer.ts"]
+}
