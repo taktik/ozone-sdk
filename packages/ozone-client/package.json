@@ -52,7 +52,11 @@
 		}
 	},
 	"files": [
-		"dist"
+		"dist",
+		"search",
+		"urls",
+		"default",
+		"upload"
 	],
 	"repository": {
 		"type": "git",
@@ -62,7 +66,7 @@
 	"scripts": {
 		"build": "tsup && tsc -p tsconfig.build.json",
 		"typecheck": "tsc --noEmit",
-		"typecheck:dist": "tsc -p dist-check/tsconfig.json",
+		"check:dist": "tsc -p dist-check/tsconfig.json && node dist-check/legacyResolve.mjs",
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {

@@ -1,0 +1,5 @@
+{
+	"main": "../dist/upload.js",
+	"types": "../dist/upload/index.d.ts",
+	"sideEffects": false
+}

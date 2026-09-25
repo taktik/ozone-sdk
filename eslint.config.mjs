@@ -88,6 +88,20 @@ export default tseslint.config(
 	},
 
 	{
+		/*
+			Build-time scripts, run by node straight from source and deliberately outside any
+			tsconfig -- so the type-aware rules have no program to read, and the parser reports the
+			file as missing from the project. Every rule that does not need types still applies.
+		*/
+		files: ['packages/*/dist-check/**/*.mjs'],
+		...tseslint.configs.disableTypeChecked,
+		languageOptions: {
+			parserOptions: { projectService: false },
+			globals: { console: 'readonly', process: 'readonly' },
+		},
+	},
+
+	{
 		files: ['packages/*/test/**/*.ts'],
 		rules: {
 			/*
