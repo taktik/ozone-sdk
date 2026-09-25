@@ -15,22 +15,22 @@
 			"require": "./dist/index.js"
 		},
 		"./search": {
-			"types": "./dist/search.d.ts",
+			"types": "./dist/search/index.d.ts",
 			"import": "./dist/search.mjs",
 			"require": "./dist/search.js"
 		},
 		"./urls": {
-			"types": "./dist/urls.d.ts",
+			"types": "./dist/urls/index.d.ts",
 			"import": "./dist/urls.mjs",
 			"require": "./dist/urls.js"
 		},
 		"./default": {
-			"types": "./dist/default.d.ts",
+			"types": "./dist/default/index.d.ts",
 			"import": "./dist/default.mjs",
 			"require": "./dist/default.js"
 		},
 		"./upload": {
-			"types": "./dist/upload.d.ts",
+			"types": "./dist/upload/index.d.ts",
 			"import": "./dist/upload.mjs",
 			"require": "./dist/upload.js"
 		}
@@ -38,16 +38,16 @@
 	"typesVersions": {
 		"*": {
 			"search": [
-				"dist/search.d.ts"
+				"dist/search/index.d.ts"
 			],
 			"urls": [
-				"dist/urls.d.ts"
+				"dist/urls/index.d.ts"
 			],
 			"default": [
-				"dist/default.d.ts"
+				"dist/default/index.d.ts"
 			],
 			"upload": [
-				"dist/upload.d.ts"
+				"dist/upload/index.d.ts"
 			]
 		}
 	},
@@ -60,8 +60,9 @@
 		"directory": "packages/ozone-client"
 	},
 	"scripts": {
-		"build": "tsup",
+		"build": "tsup && tsc -p tsconfig.build.json",
 		"typecheck": "tsc --noEmit",
+		"typecheck:dist": "tsc -p dist-check/tsconfig.json",
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {

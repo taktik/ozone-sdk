@@ -1,0 +1,28 @@
+/*
+	Declaration-only build. tsup bundles the JavaScript, tsc emits the types.
+
+	tsup's declaration bundler inlines every imported module into one file and drops
+	the module qualifier that went with it. `index.ts` re-exports through a namespace
+	whose members carry the same names as the declarations they alias
+	(`export type ItemClient<T> = itemClient.ItemClient<T>`), so once the qualifier is
+	gone the right-hand side resolves to the namespace member itself and the alias
+	references itself. tsc keeps one declaration file per source file, qualifiers
+	included, so the two names never meet.
+
+	`paths` is cleared because the base config points @taktik/ozone-type at the sibling
+	package's sources, which would pull them into this program and break `rootDir`.
+	Here it resolves through node_modules to that package's own built types.
+*/
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"noEmit": false,
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"outDir": "dist",
+		"rootDir": "src",
+		"paths": {},
+		"types": []
+	},
+	"include": ["src"]
+}
