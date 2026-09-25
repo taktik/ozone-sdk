@@ -33,10 +33,10 @@ steps:
                 echo "Building @taktik/ozone-type and @taktik/ozone-client@$$(cat git.version)"
                 yarn install --frozen-lockfile
                 yarn build
-                # Type-checks the built package from the outside, which the `verify` step cannot:
-                # it runs before there is a dist, and reads src/, where a declaration bug the build
-                # introduced does not exist. See packages/ozone-client/dist-check.
-                yarn typecheck:dist
+                # Checks the built package from the outside, which the `verify` step cannot: it runs
+                # before there is a dist, and reads src/, where a bug the build introduced does not
+                # exist. See packages/ozone-client/dist-check.
+                yarn check:dist
                 # Both packages take the one repo version, and ozone-client's dependency on
                 # ozone-type is rewritten to match: it is pinned exactly, so the published client
                 # would otherwise ask for whatever the working tree happens to say.

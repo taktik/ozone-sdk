@@ -1,0 +1,5 @@
+{
+	"main": "../dist/default.js",
+	"types": "../dist/default/index.d.ts",
+	"sideEffects": false
+}

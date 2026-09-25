@@ -1,0 +1,5 @@
+{
+	"main": "../dist/search.js",
+	"types": "../dist/search/index.d.ts",
+	"sideEffects": false
+}
