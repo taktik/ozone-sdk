@@ -56,6 +56,14 @@ const REAUTH_BACKOFF_FACTOR: number = 2
 const MAX_WS_RECONNECT_DELAY: number = 120000
 const INITIAL_WS_RECONNECT_DELAY: number = 2000
 const WS_RECONNECT_BACKOFF_FACTOR: number = 3
+/*
+	With a ping every 10 s, about a minute: long enough that a server slow to answer does not make
+	all its clients drop their connection. Counted in pings rather than measured on the clock, so
+	that neither a device resuming from standby nor a clock being set reads as a dead connection.
+*/
+const WS_MAX_PINGS_WITHOUT_PONG: number = 6
+// A ping timeout tends to hit every client of a struggling server at once, so they come back spread out
+const WS_RECONNECT_DELAY_AFTER_PING_TIMEOUT: number = 18000
 
 const MAX_SESSION_CHECK_DELAY: number = 60000
 const DEFAULT_TIMEOUT = 5000
@@ -70,6 +78,14 @@ const RETRY_JITTER_RATIO: number = 0.5
 function withRetryJitter(delayMs: number): number {
 	const spread: number = 1 - RETRY_JITTER_RATIO + 2 * RETRY_JITTER_RATIO * Math.random()
 	return Math.round(delayMs * spread)
+}
+
+/*
+	SockJS defines the ready states on the class only: unlike a WebSocket, its instances have no
+	CONNECTING or OPEN, which the typings hide by declaring them WebSockets.
+*/
+function isOpenOrConnecting(ws: WebSocket): boolean {
+	return ws.readyState === SockJS.CONNECTING || ws.readyState === SockJS.OPEN
 }
 
 class Listener {
@@ -300,7 +316,7 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 
 	@AssumeStateIs(states.WS_CONNECTED)
 	private handlePong() {
-		this._lastReceivedPong = Date.now()
+		this._pingsWithoutPong = 0
 	}
 
 	// Attempt a single Ozone login
@@ -376,7 +392,7 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 			const socket = this._ws
 			this._ws = undefined
 			try {
-				if (socket.readyState === socket.CONNECTING || socket.readyState === socket.OPEN) {
+				if (isOpenOrConnecting(socket)) {
 					socket.close(4000)
 				}
 			} catch {
@@ -534,8 +550,7 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 	// WS KeepAlive
 
 	private _wsKeepAliveTimer?: number
-	private _lastReceivedPong: number = 0
-	private _lastSentPing: number = 0
+	private _pingsWithoutPong: number = 0
 
 	private installWSPingKeepAlive() {
 		if (this._wsKeepAliveTimer) {
@@ -543,13 +558,12 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 			this.log?.warn('wsKeepAliveTimer defined when it should not be')
 			clearTimeout(this._wsKeepAliveTimer)
 		}
-		this._lastReceivedPong = Date.now()
+		this._pingsWithoutPong = 0
 		this._wsKeepAliveTimer = window.setInterval(() => this.wsKeepAlive(), 10000)
 	}
 
 	private destroyWSPingKeepAlive() {
-		this._lastSentPing = 0
-		this._lastReceivedPong = 0
+		this._pingsWithoutPong = 0
 		if (this._wsKeepAliveTimer) {
 			clearTimeout(this._wsKeepAliveTimer)
 			this._wsKeepAliveTimer = undefined
@@ -561,16 +575,16 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 		if (!this._ws) {
 			return
 		}
-		// We have at least sent one ping and no pong received for more than 30s since last ping
-		// --> Problem. We close the socket and trigger onClose()
-		if (this._lastSentPing !== 0 && this._lastSentPing - this._lastReceivedPong > 20000) {
-			if (this._ws.readyState === this._ws.CONNECTING || this._ws.readyState === this._ws.OPEN) {
+		// The pings go unanswered: the connection is dead even though the socket may still look open
+		if (this._pingsWithoutPong >= WS_MAX_PINGS_WITHOUT_PONG) {
+			if (isOpenOrConnecting(this._ws)) {
 				this.log?.warn('Ping timeout, closing connection')
+				this._wsPingTimedOut = true
 				OzoneClientImpl.terminateWSConnectionForcefully(this._ws)
 			}
 		} else {
 			const now = Date.now()
-			this._lastSentPing = now
+			this._pingsWithoutPong++
 			let message: string = 'ping'
 			if (now - this._lastSessionCheck > MAX_SESSION_CHECK_DELAY) {
 				this._lastSessionCheck = now
@@ -589,6 +603,7 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 
 	private _lastWSRetryDelay: number = 0
 	private _wsReconnectTimeout: number = 0
+	private _wsPingTimedOut: boolean = false
 
 	/*
 		Exponential back-off, derived from the previous SCHEDULED delay.
@@ -608,7 +623,10 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 
 	@AssumeStateIs(states.WS_CONNECTION_ERROR)
 	private createAutoReconnectWSTimer() {
-		const retryInterval = this.nextWSRetryInterval()
+		const retryInterval = this._wsPingTimedOut
+			? WS_RECONNECT_DELAY_AFTER_PING_TIMEOUT
+			: this.nextWSRetryInterval()
+		this._wsPingTimedOut = false
 		this._lastWSRetryDelay = retryInterval
 		this._wsReconnectTimeout = window.setTimeout(
 			() =>
