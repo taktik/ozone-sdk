@@ -2,9 +2,7 @@
  * Created by hubert on 21/06/17.
  */
 import { UUID } from '@taktik/ozone-type'
-import { FlowrImageEnum, FlowrVideoEnum } from './formats'
-import { OzoneClient } from '../ozoneClient/ozoneClient'
-import { Request } from 'typescript-http-client'
+import { FlowrImageEnum, FlowrVideoEnum, OzoneFormat } from './formats'
 
 export type SizeEnum = number
 
@@ -18,28 +16,15 @@ export class OzonePreviewSize {
  * class to convert media ID to URL
  */
 export class OzoneMediaUrl {
-
 	id: UUID
-	constructor(id: UUID, private ozoneHost: string) {
+	constructor(
+		id: UUID,
+		private ozoneHost: string,
+	) {
 		this.id = id
 	}
 
-	/**
-	 * Convert uuid to ozone v2 numeric id
-	 * @return {number}
-	 */
-	static convertToNumericID(id: UUID): number {
-		return parseInt(id.split('-')[4], 16)
-	}
-
-	getNumericId(): number {
-		return OzoneMediaUrl.convertToNumericID(this.id)
-	}
-
-	private static _buildBaseUrl(ozoneHost: string, ...action: Array<string | number>): string {
-		return `${ozoneHost}${action.join('/')}`
-	}
-	private _buildViewUrl(action: Array<string | number>): string {
+	private _buildViewUrl(action: Array<string>): string {
 		return `${this.ozoneHost}/view/${action.join('/')}`
 	}
 
@@ -50,9 +35,7 @@ export class OzoneMediaUrl {
 	 */
 	getPreviewUrlJpg(size: SizeEnum): string {
 		const preview = FlowrImageEnum.jpg.replace('{SIZE}', size.toString())
-		return this
-			._buildViewUrl([this.getNumericId(), preview])
-
+		return this._buildViewUrl([this.id, preview])
 	}
 
 	/**
@@ -64,32 +47,51 @@ export class OzoneMediaUrl {
 	}
 
 	/**
-	 * return url where to upload the media.
-	 * @return {Promise<string>}
+	 * build the form posting a download of the original files of the medias. The ids go in the body: a url
+	 * listing a large selection would exceed what a server or proxy accepts.
+	 * @return {HTMLFormElement}
 	 */
-	static async getMediaUploadUrl(
-		ids: Array<UUID>, client: OzoneClient
-	): Promise<string> {
-		const ozoneHost = client.config.ozoneURL
-		const numericIds: Array<number> = ids.map(OzoneMediaUrl.convertToNumericID)
-		const url = OzoneMediaUrl._buildBaseUrl(ozoneHost, '/rest/v2/media/download/request')
-		const body = {
-			fileAssignedToBatch: false,
-			fileTypeIdentifiers: ['org.taktik.filetype.original'],
-			mediaSet: {
-				includedMediaIds: numericIds,
-				includedMediaQueries: [],
-				simpleSelection: true,
-				singletonSelection: true
-			},
-			metadata: false
+	static createMediaDownloadForm(ids: Array<UUID>, ozoneHost: string): HTMLFormElement {
+		const form = document.createElement('form')
+		form.method = 'POST'
+		form.action = `${ozoneHost.replace(/\/$/, '')}/media`
+		form.style.display = 'none'
+		const parameters: { [name: string]: string } = {
+			medias: ids.join(','),
+			types: OzoneFormat.type.original,
 		}
-
-		const request = new Request(url, { method: 'POST', body })
-		const response = await client.call<{downloadUrl: string}>(request)
-
-		return OzoneMediaUrl._buildBaseUrl(ozoneHost, '', response.downloadUrl)
+		for (const name of Object.keys(parameters)) {
+			const input = document.createElement('input')
+			input.type = 'hidden'
+			input.name = name
+			input.value = parameters[name]
+			form.appendChild(input)
+		}
+		return form
 	}
+
+	/**
+	 * download the original files of the medias. The form posts into a hidden frame: the attachment downloads from
+	 * there, and an error page would land there rather than replace the page.
+	 */
+	static downloadMedias(ids: Array<UUID>, ozoneHost: string): void {
+		if (ids.length === 0) {
+			return
+		}
+		const frameName = 'ozone-media-download'
+		if (!document.querySelector(`iframe[name="${frameName}"]`)) {
+			const frame = document.createElement('iframe')
+			frame.name = frameName
+			frame.style.display = 'none'
+			document.body.appendChild(frame)
+		}
+		const form = OzoneMediaUrl.createMediaDownloadForm(ids, ozoneHost)
+		form.target = frameName
+		document.body.appendChild(form)
+		form.submit()
+		document.body.removeChild(form)
+	}
+
 	/**
 	 * return url to png preview
 	 * @param {SizeEnum} size
@@ -97,9 +99,7 @@ export class OzoneMediaUrl {
 	 */
 	getPreviewUrlPng(size: SizeEnum): string {
 		const preview = FlowrImageEnum.png.replace('{SIZE}', size.toString())
-		return this
-			._buildViewUrl([this.getNumericId(), preview])
-
+		return this._buildViewUrl([this.id, preview])
 	}
 
 	/**
@@ -118,10 +118,7 @@ export class OzoneMediaUrl {
 	 */
 	getVideoUrl(formatName?: FlowrVideoEnum): string {
 		const format = formatName || FlowrVideoEnum.flowr
-		return this
-			._buildViewUrl([this.getNumericId(),
-				format,
-				'index.m3u8'])
+		return this._buildViewUrl([this.id, format, 'index.m3u8'])
 	}
 
 	/**
@@ -130,8 +127,6 @@ export class OzoneMediaUrl {
 	 */
 	getVideoUrlMp4(): string {
 		const format = FlowrVideoEnum.mp4
-		return this
-			._buildViewUrl([this.getNumericId(),
-				format])
+		return this._buildViewUrl([this.id, format])
 	}
 }
