@@ -124,3 +124,19 @@ client.send(message)
 
 Every call goes through `preFilters` then the client's own filters then `postFilters`. Both arrays
 are live — push to them at any time to add a header, log, or intercept a status.
+
+## Media urls
+
+```typescript
+import { OzoneMediaUrl, OzonePreviewSize } from '@taktik/ozone-client/urls'
+
+new OzoneMediaUrl(media.id, client.config.ozoneURL).getPreviewUrlJpg(OzonePreviewSize.Medium)
+
+// Posts the selection as a form into a hidden frame: a url could not list a large one
+OzoneMediaUrl.downloadMedias(ids, client.config.ozoneURL)
+```
+
+The urls carry the media UUID, which `/view` accepts since Ozone 3.3; `downloadMedias` posts to
+`/media`, which accepts a selection since 3.3 too. Unlike `ozone-media-url` 6.x, there is no
+`convertToNumericID`, `getNumericId` or `getMediaUploadUrl`: a media created with a random UUID has
+no legacy integer id, and the download url went through the v2 API.
