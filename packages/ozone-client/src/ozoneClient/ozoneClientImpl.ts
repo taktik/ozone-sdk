@@ -117,6 +117,8 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 	private _lastFailedLogin?: HttpClientResponse<AuthInfo>
 	private readonly _messageListeners: MessageListeners
 	private _lastSessionCheck: number = 0
+	// Lets a call tell whether a login has replaced the session it went out with
+	private _logins: number = 0
 	private _httpClient: HttpClient
 	private acknowledgedCache: Cache<UUID, boolean> = new Cache({ max: 100, maxAge: 60000 })
 	readonly preFilters: InstalledFilter[] = []
@@ -322,6 +324,7 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 	// Attempt a single Ozone login
 	@AssumeStateIs(states.AUTHENTICATING)
 	private async login() {
+		this._logins++
 		// Destroy any existing WS
 		this.destroyWs()
 		try {
@@ -720,7 +723,11 @@ export class OzoneClientImpl extends StateMachineImpl<ClientState> implements Oz
 		if (defaultFilters.includes(DEFAULT_FILTERS.SESSION_REFRESH)) {
 			// Try to auto-refresh the session if expired
 			this._httpClient.addFilter(
-				new SessionRefreshFilter(this, (lastCheck) => (this._lastSessionCheck = lastCheck)),
+				new SessionRefreshFilter(
+					this,
+					(lastCheck) => (this._lastSessionCheck = lastCheck),
+					() => this._logins,
+				),
 				DEFAULT_FILTERS.SESSION_REFRESH,
 			)
 		}
@@ -839,9 +846,24 @@ class SessionRefreshFilter implements Filter<any, any> {
 	constructor(
 		readonly client: OzoneClientInternals,
 		readonly sessionCheckCallBack: (lastCheck: number) => void,
+		readonly loginCount: () => number,
 	) {}
 
 	async doFilter(call: Request, filterChain: FilterChain<any>): Promise<HttpClientResponse<any>> {
+		/*
+			login() drops the session as it starts, so a call made during a login would go out
+			without one and be served as anonymous: hold it until the login is done. Credentials
+			must therefore not call through this client to log in, or the login would never end.
+		*/
+		while (this.client.state === states.AUTHENTICATING) {
+			await this.client.waitUntilLeft(states.AUTHENTICATING)
+		}
+		/*
+			The logins behind the session the call goes out with, which the session filter, right after
+			this one, adds in the same tick. Counted rather than compared by session id, since
+			credentials such as SessionCredentials can log in again to the same session.
+		*/
+		const logins = this.loginCount()
 		try {
 			const response = await filterChain.doFilter(call)
 			const principalId = response.headers['ozone-principal-id']
@@ -858,16 +880,28 @@ class SessionRefreshFilter implements Filter<any, any> {
 				// If we receive a principal id, it means we are still authenticated with a valid session, so there is no need
 				// to try to re-authenticate
 				!response.headers['ozone-principal-id'] &&
-				// Only try to re-authenticate if we are already authenticated
-				this.client.isAuthenticated
+				// Only try to re-authenticate if we are already authenticated, or about to be
+				(this.client.isAuthenticated || this.client.state === states.AUTHENTICATING)
 			) {
 				try {
-					// TODO AB Protect this call to avoid multiple login in //
 					// TODO AB Destroy WebSocket ( don't wait connecting state)
-					// This will trigger a login
-					this.client.setState(states.AUTHENTICATING)
+					/*
+						Log in again, unless a login has replaced the session the call went out with, or is
+						replacing it: the call then just needs replaying with the new session, and another
+						login would destroy it, and the WebSocket opened with it.
+					*/
+					if (this.client.isAuthenticated && this.loginCount() === logins) {
+						// This will trigger a login
+						this.client.setState(states.AUTHENTICATING)
+					}
 					// await result of login
-					await this.client.waitUntilLeft(states.AUTHENTICATING)
+					while (this.client.state === states.AUTHENTICATING) {
+						await this.client.waitUntilLeft(states.AUTHENTICATING)
+					}
+					// The login failed or the client was stopped: no session to retry the call with
+					if (!this.client.isAuthenticated) {
+						throw e
+					}
 					// Retry the call
 					return await filterChain.doFilter(call)
 				} catch (e) {
